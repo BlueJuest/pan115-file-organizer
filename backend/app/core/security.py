@@ -10,6 +10,8 @@ def mask_secret(value: str | None, visible: int = 4) -> str:
         return "*" * len(value)
     if len(value) <= keep:
         return "*" * len(value)
+    if len(value) <= keep * 2:
+        return value[:keep] + "*" * (len(value) - keep)
 
     return value[:keep] + "*" * max(len(value) - keep - 1, 0) + value[-keep:]
 

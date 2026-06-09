@@ -29,6 +29,31 @@ def test_settings_round_trip_masks_secrets():
     assert body["default_source_dir"] == "100"
 
 
+def test_settings_masks_short_secrets():
+    client = TestClient(app)
+
+    response = client.put(
+        "/api/settings",
+        json={
+            "pan115_cookie": "abcde",
+            "tmdb_api_key": "abcdefgh",
+            "tmdb_language": "zh-CN",
+            "default_source_dir": "100",
+            "default_target_dir": "200",
+            "default_recycle_dir": "300",
+            "allow_delete_old_files": False,
+            "recursive_scan": True,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["pan115_cookie_masked"] != "abcde"
+    assert "*" in body["pan115_cookie_masked"]
+    assert body["tmdb_api_key_masked"] != "abcdefgh"
+    assert "*" in body["tmdb_api_key_masked"]
+
+
 def test_test_endpoints_return_not_configured_when_missing_keys():
     client = TestClient(app)
 
