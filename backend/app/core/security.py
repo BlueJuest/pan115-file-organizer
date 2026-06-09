@@ -13,7 +13,7 @@ def mask_secret(value: str | None, visible: int = 4) -> str:
     if len(value) <= keep * 2:
         return value[:keep] + "*" * (len(value) - keep)
 
-    return value[:keep] + "*" * max(len(value) - keep - 1, 0) + value[-keep:]
+    return value[:keep] + "*" * (len(value) - keep * 2) + value[-keep:]
 
 
 def clean_path_part(value: str) -> str:

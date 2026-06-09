@@ -42,8 +42,10 @@ def read_settings(db: Session = Depends(get_db)) -> SettingsRead:
 @router.put("", response_model=SettingsRead)
 def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)) -> SettingsRead:
     settings = get_or_create_settings(db)
-    settings.pan115_cookie = payload.pan115_cookie
-    settings.tmdb_api_key = payload.tmdb_api_key
+    if payload.pan115_cookie:
+        settings.pan115_cookie = payload.pan115_cookie
+    if payload.tmdb_api_key:
+        settings.tmdb_api_key = payload.tmdb_api_key
     settings.tmdb_language = payload.tmdb_language
     settings.default_source_dir = payload.default_source_dir
     settings.default_target_dir = payload.default_target_dir

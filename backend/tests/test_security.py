@@ -2,7 +2,15 @@ from app.core.security import clean_path_part, mask_secret
 
 
 def test_mask_secret_hides_middle():
-    assert mask_secret("UID=abc;CID=def;SEID=secret", visible=4) == "UID=**********************cret"
+    assert mask_secret("UID=abc;CID=def;SEID=secret", visible=4) == "UID=*******************cret"
+
+
+def test_mask_secret_keeps_original_length_for_boundary_values():
+    for value in ["123456789", "1234567890", "123456789012"]:
+        masked = mask_secret(value, visible=4)
+        assert len(masked) == len(value)
+        assert "*" in masked
+        assert masked != value
 
 
 def test_mask_secret_handles_empty_value():
