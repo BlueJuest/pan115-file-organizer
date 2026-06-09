@@ -24,6 +24,13 @@ cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e .[dev]
+python -c "import fastapi, sqlalchemy, pydantic; print('backend deps ok')"
+```
+
+Task 1 阶段仅验证依赖导入；有测试用例后再运行 `pytest`。
+后续 Task 2 创建 `app/main.py` 后再运行：
+
+```powershell
 pytest
 uvicorn app.main:app --reload
 ```
