@@ -13,6 +13,18 @@ def test_template_engine_renders_and_cleans_path_parts():
     assert result.path == "/电影/电影_名 (2024)/电影_名_2024.mkv"
 
 
+def test_template_engine_renders_format_specs():
+    engine = TemplateEngine()
+
+    result = engine.render(
+        "/剧集/S{season:02d}E{episode:02d}.mkv",
+        {"season": 1, "episode": 2},
+    )
+
+    assert result.ok is True
+    assert result.path == "/剧集/S01E02.mkv"
+
+
 def test_template_engine_renders_single_field_with_literal_suffix():
     engine = TemplateEngine()
 
