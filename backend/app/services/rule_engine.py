@@ -30,7 +30,7 @@ class RuleEngine:
         rules: list[RenameRuleInput],
         media_type: str,
     ) -> RuleMatchResult:
-        for rule in sorted(rules, key=lambda item: item.priority, reverse=True):
+        for rule in sorted(rules, key=lambda item: item.priority):
             if not rule.enabled:
                 continue
             if rule.media_type not in {"general", media_type}:
