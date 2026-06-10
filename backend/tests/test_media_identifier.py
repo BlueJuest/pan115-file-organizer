@@ -172,6 +172,22 @@ def test_mock_pan115_rejects_move_to_self_and_descendant_without_breaking_tree()
     assert client.get_path("12") == "/剧集/S01/E01.mkv"
 
 
+def test_mock_pan115_mkdir_creates_directory_under_parent():
+    client = MockPan115Client()
+
+    new_dir = client.mkdir("0", "新目录")
+
+    assert new_dir.name == "新目录"
+    assert new_dir.path == "/新目录"
+    assert new_dir.dir_id != "0"
+    root_children = client.list_dir("0")
+    assert len(root_children) == 1
+    assert root_children[0].file_id == new_dir.dir_id
+    assert root_children[0].name == "新目录"
+    assert root_children[0].is_dir is True
+    assert client.get_path(new_dir.dir_id) == "/新目录"
+
+
 def test_mock_pan115_rejects_invalid_mkdir_parent():
     client = MockPan115Client(files=[RemoteFile("1", "电影.mkv", "/电影.mkv", "0", False)])
 
@@ -192,6 +208,27 @@ def test_mock_pan115_rejects_invalid_mkdir_names_without_creating_nodes():
         client.mkdir("0", "a\\b")
 
     assert client.list_dir("0") == []
+
+
+def test_mock_pan115_delete_removes_directory_descendants_and_keeps_unrelated_nodes():
+    client = MockPan115Client(
+        files=[
+            RemoteFile("10", "剧集", "/剧集", "0", True),
+            RemoteFile("11", "S01", "/剧集/S01", "10", True),
+            RemoteFile("12", "E01.mkv", "/剧集/S01/E01.mkv", "11", False),
+            RemoteFile("20", "电影", "/电影", "0", True),
+            RemoteFile("21", "电影.mkv", "/电影/电影.mkv", "20", False),
+        ]
+    )
+
+    result = client.delete("10")
+
+    assert result.ok is True
+    assert client.get_path("10") == ""
+    assert client.get_path("11") == ""
+    assert client.get_path("12") == ""
+    assert client.get_path("20") == "/电影"
+    assert client.get_path("21") == "/电影/电影.mkv"
 
 
 def test_mock_pan115_delete_missing_fails_and_get_path_missing_returns_empty():
