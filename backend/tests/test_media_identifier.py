@@ -111,6 +111,17 @@ def test_mock_pan115_rename_updates_path():
     assert client.get_path("1") == "/电影/新名.mkv"
 
 
+def test_mock_pan115_rename_preserves_directory_when_parent_is_missing():
+    client = MockPan115Client(
+        files=[RemoteFile("f1", "旧名.mkv", "/下载/旧名.mkv", "src", False, 1)]
+    )
+
+    result = client.rename("f1", "新名.mkv")
+
+    assert result.ok is True
+    assert client.get_path("f1") == "/下载/新名.mkv"
+
+
 def test_mock_pan115_rejects_invalid_rename_names_without_changing_path():
     client = MockPan115Client(files=[RemoteFile("file", "旧名.mkv", "/旧名.mkv", "0", False)])
 

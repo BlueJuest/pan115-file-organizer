@@ -32,7 +32,7 @@ class MockPan115Client:
             return OperationResult(False, "文件名不合法")
 
         file.name = new_name
-        file.path = self._join_path(self._parent_path(file.parent_id), new_name)
+        file.path = self._join_path(self._rename_parent_path(file), new_name)
         self._refresh_children_paths(file_id)
         return OperationResult(True)
 
@@ -102,6 +102,14 @@ class MockPan115Client:
         if parent is None:
             return "/"
         return parent.path
+
+    def _rename_parent_path(self, file: RemoteFile) -> str:
+        parent = self._files.get(file.parent_id)
+        if parent is not None:
+            return parent.path
+        if "/" not in file.path.strip("/"):
+            return "/"
+        return file.path.rsplit("/", 1)[0] or "/"
 
     def _join_path(self, parent_path: str, name: str) -> str:
         if parent_path == "/":
