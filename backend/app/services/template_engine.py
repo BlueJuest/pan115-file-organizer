@@ -14,7 +14,11 @@ class TemplateRenderResult:
 
 class TemplateEngine:
     def render(self, template: str, fields: dict[str, object]) -> TemplateRenderResult:
-        field_names = self._field_names(template)
+        try:
+            field_names = self._field_names(template)
+        except (ValueError, TypeError) as exc:
+            return TemplateRenderResult(ok=False, error=str(exc))
+
         missing_fields = [name for name in field_names if name not in fields]
         if missing_fields:
             return TemplateRenderResult(ok=False, missing_fields=missing_fields)
@@ -31,7 +35,7 @@ class TemplateEngine:
                 path = f"/{path}"
         except (KeyError, IndexError) as exc:
             return TemplateRenderResult(ok=False, missing_fields=[str(exc)])
-        except (ValueError, TypeError) as exc:
+        except (AttributeError, ValueError, TypeError) as exc:
             return TemplateRenderResult(ok=False, error=str(exc))
 
         return TemplateRenderResult(ok=True, path=path)
@@ -45,13 +49,16 @@ class TemplateEngine:
                 name = self._base_field_name(field_name)
                 if name not in names:
                     names.append(name)
-            for _, nested_field_name, _, _ in formatter.parse(format_spec):
-                if nested_field_name:
-                    name = self._base_field_name(nested_field_name)
-                    if name not in names:
-                        names.append(name)
+            if format_spec:
+                for _, nested_field_name, _, _ in formatter.parse(format_spec):
+                    if nested_field_name:
+                        name = self._base_field_name(nested_field_name)
+                        if name not in names:
+                            names.append(name)
 
         return names
 
     def _base_field_name(self, field_name: str) -> str:
-        return field_name.replace("[", ".").split(".", 1)[0]
+        if "." in field_name or "[" in field_name or "]" in field_name:
+            raise ValueError(f"不支持复杂字段访问: {field_name}")
+        return field_name

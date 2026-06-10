@@ -45,8 +45,12 @@ class RuleEngine:
             if not matched:
                 continue
 
-            fields = matched.groupdict()
-            fields["ext"] = PurePath(filename).suffix.lstrip(".")
+            fields = {
+                key: value.strip()
+                for key, value in matched.groupdict().items()
+                if value is not None
+            }
+            fields.setdefault("ext", PurePath(filename).suffix.lstrip("."))
             return RuleMatchResult(
                 matched=True,
                 rule_id=rule.id,

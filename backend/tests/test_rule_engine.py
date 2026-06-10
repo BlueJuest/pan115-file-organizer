@@ -54,6 +54,42 @@ def test_rule_engine_prefers_lower_priority_rule_when_multiple_rules_match():
     assert result.rule_id == 9
 
 
+def test_rule_engine_omits_unmatched_optional_named_groups():
+    engine = RuleEngine()
+    rule = RenameRuleInput(
+        id=3,
+        name="optional-season",
+        media_type="movie",
+        pattern=r"(?P<title>.+?)(?: S(?P<season>\d+))?",
+        template="{title}",
+        priority=1,
+        enabled=True,
+    )
+
+    result = engine.match("电影名.mkv", [rule], media_type="movie")
+
+    assert result.matched is True
+    assert "season" not in result.fields
+
+
+def test_rule_engine_keeps_explicitly_captured_extension():
+    engine = RuleEngine()
+    rule = RenameRuleInput(
+        id=4,
+        name="explicit-ext",
+        media_type="movie",
+        pattern=r"(?P<title>.+)\.(?P<ext>custom)",
+        template="{title}.{ext}",
+        priority=1,
+        enabled=True,
+    )
+
+    result = engine.match("电影名.custom.mkv", [rule], media_type="movie")
+
+    assert result.matched is True
+    assert result.fields["ext"] == "custom"
+
+
 def test_rule_engine_returns_error_for_invalid_regex():
     engine = RuleEngine()
     rule = RenameRuleInput(
