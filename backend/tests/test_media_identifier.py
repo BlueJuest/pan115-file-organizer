@@ -155,6 +155,10 @@ def test_mock_pan115_delete_missing_fails_and_get_path_missing_returns_empty():
 def test_mock_pan115_rejects_root_mutations():
     client = MockPan115Client()
 
+    rename_result = client.rename("0", "root2")
+
+    assert rename_result.ok is False
+    assert client.get_path("0") == "/"
     assert client.move("0", "0").ok is False
     assert client.delete("0").ok is False
 
@@ -299,7 +303,7 @@ def test_media_identifier_selects_highest_confidence_candidate():
 
     result = MediaIdentifier(MultiCandidateTmdbClient()).identify(ParsedFileInfo("标题", 2024, "movie"))
 
-    assert result.status == "recognized"
+    assert result.status == "need_confirm"
     assert result.tmdb_id == 2
     assert result.title_cn == "高分"
 
@@ -324,6 +328,57 @@ def test_media_identifier_auto_searches_movie_and_tv():
     result = MediaIdentifier(tmdb_client).identify(ParsedFileInfo("标题", 2024, "auto"))
 
     assert tmdb_client.calls == ["movie", "tv"]
+    assert result.status == "need_confirm"
+    assert result.tmdb_id == 2
+    assert result.media_type == "tv"
+
+
+def test_media_identifier_anime_searches_tv_only():
+    class TvOnlyTmdbClient:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def search_movie(self, title: str, year: int | None):
+            self.calls.append("movie")
+            return [TmdbCandidate(1, "movie", "电影", "Movie", 2024, 0.95)]
+
+        def search_tv(self, title: str, year: int | None):
+            self.calls.append("tv")
+            return [TmdbCandidate(2, "tv", "动画", "Anime", 2024, 0.95)]
+
+        def get_details(self, tmdb_id: int, media_type: str):
+            return None
+
+    tmdb_client = TvOnlyTmdbClient()
+    result = MediaIdentifier(tmdb_client).identify(ParsedFileInfo("动画", 2024, "anime"))
+
+    assert tmdb_client.calls == ["tv"]
+    assert result.status == "recognized"
+    assert result.tmdb_id == 2
+    assert result.media_type == "tv"
+
+
+def test_media_identifier_variety_searches_tv_only():
+    class TvOnlyTmdbClient:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def search_movie(self, title: str, year: int | None):
+            self.calls.append("movie")
+            return [TmdbCandidate(1, "movie", "电影", "Movie", 2024, 0.95)]
+
+        def search_tv(self, title: str, year: int | None):
+            self.calls.append("tv")
+            return [TmdbCandidate(2, "tv", "综艺", "Variety", 2024, 0.95)]
+
+        def get_details(self, tmdb_id: int, media_type: str):
+            return None
+
+    tmdb_client = TvOnlyTmdbClient()
+    result = MediaIdentifier(tmdb_client).identify(ParsedFileInfo("综艺", 2024, "variety"))
+
+    assert tmdb_client.calls == ["tv"]
+    assert result.status == "recognized"
     assert result.tmdb_id == 2
     assert result.media_type == "tv"
 

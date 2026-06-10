@@ -43,7 +43,7 @@ class MediaIdentifier:
             return self._fallback(parsed, "not_recognized")
 
         best = max(candidates, key=lambda candidate: candidate.confidence)
-        status = "recognized" if best.confidence >= 0.75 else "need_confirm"
+        status = "recognized" if len(candidates) == 1 and best.confidence >= 0.75 else "need_confirm"
         return MediaIdentifyResult(
             status=status,
             media_type=best.media_type,

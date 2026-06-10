@@ -26,6 +26,8 @@ class MockPan115Client:
         file = self._files.get(file_id)
         if file is None:
             return OperationResult(False, "文件不存在")
+        if file_id == "0":
+            return OperationResult(False, "不能重命名根目录")
 
         file.name = new_name
         file.path = self._join_path(self._parent_path(file.parent_id), new_name)
