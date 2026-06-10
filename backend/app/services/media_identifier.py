@@ -33,10 +33,9 @@ class MediaIdentifier:
             return self._fallback(parsed, "no_tmdb_client")
 
         try:
-            if parsed.media_type == "movie":
-                candidates = self.tmdb_client.search_movie(parsed.title, parsed.year)
-            else:
-                candidates = self.tmdb_client.search_tv(parsed.title, parsed.year)
+            candidates = self._search_candidates(parsed)
+        except ValueError:
+            return self._fallback(parsed, "unsupported_media_type")
         except Exception as exc:
             return self._fallback(parsed, "tmdb_failed", str(exc))
 
@@ -55,6 +54,20 @@ class MediaIdentifier:
             confidence=best.confidence,
             candidates=candidates,
         )
+
+    def _search_candidates(self, parsed: ParsedFileInfo) -> list[TmdbCandidate]:
+        if self.tmdb_client is None:
+            return []
+        if parsed.media_type == "movie":
+            return self.tmdb_client.search_movie(parsed.title, parsed.year)
+        if parsed.media_type in {"tv", "anime", "variety"}:
+            return self.tmdb_client.search_tv(parsed.title, parsed.year)
+        if parsed.media_type == "auto":
+            return [
+                *self.tmdb_client.search_movie(parsed.title, parsed.year),
+                *self.tmdb_client.search_tv(parsed.title, parsed.year),
+            ]
+        raise ValueError(f"不支持的媒体类型: {parsed.media_type}")
 
     def _fallback(
         self,
