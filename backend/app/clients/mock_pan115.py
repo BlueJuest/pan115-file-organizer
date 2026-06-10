@@ -28,6 +28,8 @@ class MockPan115Client:
             return OperationResult(False, "文件不存在")
         if file_id == "0":
             return OperationResult(False, "不能重命名根目录")
+        if not self._is_valid_name(new_name):
+            return OperationResult(False, "文件名不合法")
 
         file.name = new_name
         file.path = self._join_path(self._parent_path(file.parent_id), new_name)
@@ -68,6 +70,8 @@ class MockPan115Client:
         parent = self._files.get(parent_id)
         if parent is None or not parent.is_dir:
             raise ValueError("父目录不存在")
+        if not self._is_valid_name(name):
+            raise ValueError("目录名不合法")
 
         dir_id = str(self._next_id)
         self._next_id += 1
@@ -103,6 +107,9 @@ class MockPan115Client:
         if parent_path == "/":
             return f"/{name}"
         return f"{parent_path}/{name}"
+
+    def _is_valid_name(self, name: str) -> bool:
+        return bool(name) and "/" not in name and "\\" not in name
 
     def _refresh_children_paths(self, file_id: str) -> None:
         parent = self._files[file_id]

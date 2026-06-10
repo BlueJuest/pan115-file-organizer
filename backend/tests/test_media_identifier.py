@@ -86,6 +86,20 @@ def test_media_identifier_falls_back_when_tmdb_fails():
     assert result.error == "network down"
 
 
+def test_media_identifier_reports_tmdb_value_error_as_tmdb_failed():
+    class BadPayloadTmdbClient(FakeTmdbClient):
+        def search_movie(self, title: str, year: int | None):
+            raise ValueError("bad payload")
+
+    identifier = MediaIdentifier(tmdb_client=BadPayloadTmdbClient())
+    parsed = ParsedFileInfo(title="坏电影", year=2024, media_type="movie")
+
+    result = identifier.identify(parsed)
+
+    assert result.status == "tmdb_failed"
+    assert "bad payload" in result.error
+
+
 def test_mock_pan115_rename_updates_path():
     client = MockPan115Client(
         files=[RemoteFile("1", "旧名.mkv", "/电影/旧名.mkv", "2", False, size=1024), RemoteFile("2", "电影", "/电影", "0", True)]
@@ -95,6 +109,19 @@ def test_mock_pan115_rename_updates_path():
 
     assert result.ok is True
     assert client.get_path("1") == "/电影/新名.mkv"
+
+
+def test_mock_pan115_rejects_invalid_rename_names_without_changing_path():
+    client = MockPan115Client(files=[RemoteFile("file", "旧名.mkv", "/旧名.mkv", "0", False)])
+
+    empty_result = client.rename("file", "")
+    slash_result = client.rename("file", "a/b.mkv")
+    backslash_result = client.rename("file", "a\\b.mkv")
+
+    assert empty_result.ok is False
+    assert slash_result.ok is False
+    assert backslash_result.ok is False
+    assert client.get_path("file") == "/旧名.mkv"
 
 
 def test_mock_pan115_move_directory_refreshes_child_paths():
@@ -141,6 +168,19 @@ def test_mock_pan115_rejects_invalid_mkdir_parent():
         client.mkdir("missing", "新目录")
     with pytest.raises(ValueError):
         client.mkdir("1", "新目录")
+
+
+def test_mock_pan115_rejects_invalid_mkdir_names_without_creating_nodes():
+    client = MockPan115Client()
+
+    with pytest.raises(ValueError):
+        client.mkdir("0", "")
+    with pytest.raises(ValueError):
+        client.mkdir("0", "a/b")
+    with pytest.raises(ValueError):
+        client.mkdir("0", "a\\b")
+
+    assert client.list_dir("0") == []
 
 
 def test_mock_pan115_delete_missing_fails_and_get_path_missing_returns_empty():

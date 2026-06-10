@@ -31,11 +31,11 @@ class MediaIdentifier:
     def identify(self, parsed: ParsedFileInfo) -> MediaIdentifyResult:
         if self.tmdb_client is None:
             return self._fallback(parsed, "no_tmdb_client")
+        if parsed.media_type not in {"movie", "tv", "anime", "variety", "auto"}:
+            return self._fallback(parsed, "unsupported_media_type")
 
         try:
             candidates = self._search_candidates(parsed)
-        except ValueError:
-            return self._fallback(parsed, "unsupported_media_type")
         except Exception as exc:
             return self._fallback(parsed, "tmdb_failed", str(exc))
 
