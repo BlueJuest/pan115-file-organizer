@@ -44,9 +44,10 @@ class MediaIdentifier:
 
         best = max(candidates, key=lambda candidate: candidate.confidence)
         status = "recognized" if len(candidates) == 1 and best.confidence >= 0.75 else "need_confirm"
+        result_media_type = best.media_type if parsed.media_type == "auto" else parsed.media_type
         return MediaIdentifyResult(
             status=status,
-            media_type=best.media_type,
+            media_type=result_media_type,
             title_cn=best.title_cn,
             title_original=best.title_original,
             year=best.year,

@@ -135,6 +135,22 @@ def test_mock_pan115_rejects_invalid_rename_names_without_changing_path():
     assert client.get_path("file") == "/旧名.mkv"
 
 
+def test_mock_pan115_rejects_rename_to_existing_sibling_name():
+    client = MockPan115Client(
+        files=[
+            RemoteFile("A", "A.mkv", "/A.mkv", "0", False, 1),
+            RemoteFile("B", "B.mkv", "/B.mkv", "0", False, 1),
+        ]
+    )
+
+    result = client.rename("B", "A.mkv")
+
+    assert result.ok is False
+    assert "目标已存在" in result.message
+    assert client.get_path("A") == "/A.mkv"
+    assert client.get_path("B") == "/B.mkv"
+
+
 def test_mock_pan115_move_directory_refreshes_child_paths():
     client = MockPan115Client(
         files=[
@@ -170,6 +186,25 @@ def test_mock_pan115_rejects_move_to_self_and_descendant_without_breaking_tree()
     assert client.get_path("10") == "/剧集"
     assert client.get_path("11") == "/剧集/S01"
     assert client.get_path("12") == "/剧集/S01/E01.mkv"
+
+
+def test_mock_pan115_rejects_move_when_target_has_same_name():
+    client = MockPan115Client(
+        files=[
+            RemoteFile("src", "来源", "/来源", "0", True),
+            RemoteFile("dst", "目标", "/目标", "0", True),
+            RemoteFile("file", "A.mkv", "/来源/A.mkv", "src", False, 1),
+            RemoteFile("existing", "A.mkv", "/目标/A.mkv", "dst", False, 1),
+        ]
+    )
+
+    result = client.move("file", "dst")
+
+    assert result.ok is False
+    assert "目标已存在" in result.message
+    assert client.get_path("file") == "/来源/A.mkv"
+    assert client.list_dir("src")[0].file_id == "file"
+    assert client.get_path("existing") == "/目标/A.mkv"
 
 
 def test_mock_pan115_mkdir_creates_directory_under_parent():
@@ -208,6 +243,17 @@ def test_mock_pan115_rejects_invalid_mkdir_names_without_creating_nodes():
         client.mkdir("0", "a\\b")
 
     assert client.list_dir("0") == []
+
+
+def test_mock_pan115_rejects_mkdir_when_sibling_name_exists():
+    client = MockPan115Client(files=[RemoteFile("10", "剧集", "/剧集", "0", True)])
+
+    with pytest.raises(ValueError, match="目标已存在"):
+        client.mkdir("0", "剧集")
+
+    matching_children = [child for child in client.list_dir("0") if child.name == "剧集"]
+    assert len(matching_children) == 1
+    assert matching_children[0].file_id == "10"
 
 
 def test_mock_pan115_delete_removes_directory_descendants_and_keeps_unrelated_nodes():
@@ -443,7 +489,7 @@ def test_media_identifier_anime_searches_tv_only():
     assert tmdb_client.calls == ["tv"]
     assert result.status == "recognized"
     assert result.tmdb_id == 2
-    assert result.media_type == "tv"
+    assert result.media_type == "anime"
 
 
 def test_media_identifier_variety_searches_tv_only():
@@ -468,7 +514,7 @@ def test_media_identifier_variety_searches_tv_only():
     assert tmdb_client.calls == ["tv"]
     assert result.status == "recognized"
     assert result.tmdb_id == 2
-    assert result.media_type == "tv"
+    assert result.media_type == "variety"
 
 
 def test_media_identifier_unknown_media_type_fallback():

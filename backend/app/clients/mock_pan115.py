@@ -30,6 +30,8 @@ class MockPan115Client:
             return OperationResult(False, "不能重命名根目录")
         if not self._is_valid_name(new_name):
             return OperationResult(False, "文件名不合法")
+        if self._has_sibling_named(file.parent_id, new_name, exclude_id=file_id):
+            return OperationResult(False, "目标已存在")
 
         file.name = new_name
         file.path = self._join_path(self._rename_parent_path(file), new_name)
@@ -49,6 +51,8 @@ class MockPan115Client:
             return OperationResult(False, "不能移动到自身")
         if file.is_dir and self._is_descendant(target_dir_id, file_id):
             return OperationResult(False, "不能移动到自身子目录")
+        if self._has_sibling_named(target_dir_id, file.name, exclude_id=file_id):
+            return OperationResult(False, "目标已存在")
 
         file.parent_id = target_dir_id
         file.path = self._join_path(target.path, file.name)
@@ -72,6 +76,8 @@ class MockPan115Client:
             raise ValueError("父目录不存在")
         if not self._is_valid_name(name):
             raise ValueError("目录名不合法")
+        if self._has_sibling_named(parent_id, name):
+            raise ValueError("目标已存在")
 
         dir_id = str(self._next_id)
         self._next_id += 1
@@ -118,6 +124,12 @@ class MockPan115Client:
 
     def _is_valid_name(self, name: str) -> bool:
         return bool(name) and "/" not in name and "\\" not in name
+
+    def _has_sibling_named(self, parent_id: str, name: str, exclude_id: str | None = None) -> bool:
+        return any(
+            file.parent_id == parent_id and file.name == name and file.file_id != exclude_id
+            for file in self._files.values()
+        )
 
     def _refresh_children_paths(self, file_id: str) -> None:
         parent = self._files[file_id]
