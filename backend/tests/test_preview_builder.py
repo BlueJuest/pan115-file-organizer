@@ -24,20 +24,15 @@ class FakeIdentifier:
 def test_preview_builder_builds_rename_move_item_for_recognized_movie():
     pan_client = MockPan115Client(
         [
+            RemoteFile("root", "root", "/", "", True),
+            RemoteFile("src", "下载", "/下载", "root", True),
             RemoteFile(
-                file_id="src",
-                name="待整理",
-                path="/待整理",
-                parent_id="0",
-                is_dir=True,
-            ),
-            RemoteFile(
-                file_id="f1",
-                name="流浪地球 2019 2160p.mkv",
-                path="/待整理/流浪地球 2019 2160p.mkv",
-                parent_id="src",
-                is_dir=False,
-                size=1024,
+                "f1",
+                "流浪地球 2019 2160p.mkv",
+                "/下载/流浪地球 2019 2160p.mkv",
+                "src",
+                False,
+                12000,
             ),
         ]
     )
@@ -46,8 +41,8 @@ def test_preview_builder_builds_rename_move_item_for_recognized_movie():
             id=1,
             name="电影规则",
             media_type="movie",
-            pattern=r"^(?P<title>.+?)\s+(?P<year>\d{4})\s+(?P<quality>\d+p)\.(?P<ext>mkv)$",
-            template="/电影/{title_cn} ({year})/{title_cn} ({year}) - {quality}.{ext}",
+            pattern=r"(?P<title>.+?) (?P<year>20\d{2}) (?P<resolution>\d{3,4}p)",
+            template="/电影/{title_cn} ({year})/{title_cn} ({year}) - {resolution}.{ext}",
             priority=1,
             enabled=True,
         )
