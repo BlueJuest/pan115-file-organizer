@@ -9,12 +9,14 @@
 - 不包含多用户登录。
 - 不包含定时任务。
 - 不自动删除旧文件。
+- 真实 115 文件操作必须先生成预览，再由用户确认执行。
 
 ## 安全原则
 
 - 默认只生成预览，不执行真实 115 操作。
 - 所有改名、移动、洗版都需要用户在预览页确认。
 - 115 Cookie 和 TMDB API Key 脱敏显示，不写入日志。
+- 删除旧文件默认关闭；真实删除不承诺可回滚。
 - 回滚只针对本工具记录过且当前仍可反向操作的文件。
 
 ## 后端开发
@@ -24,16 +26,12 @@ cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e .[dev]
-python -c "import fastapi, sqlalchemy, pydantic; print('backend deps ok')"
-```
-
-Task 1 阶段仅验证依赖导入；有测试用例后再运行 `pytest`。
-后续 Task 2 创建 `app/main.py` 后再运行：
-
-```powershell
 pytest
 uvicorn app.main:app --reload
 ```
+
+后端地址：`http://127.0.0.1:8000`  
+接口文档：`http://127.0.0.1:8000/docs`
 
 ## 前端开发
 
@@ -42,3 +40,15 @@ cd frontend
 npm install
 npm run dev
 ```
+
+前端地址：`http://127.0.0.1:5173`
+
+## 第一版人工验收流程
+
+1. 打开系统配置页，保存 115 Cookie 和 TMDB API Key。
+2. 打开重命名规则页，新增电影规则。
+3. 打开目录扫描页，填写源目录和目标目录，生成预览。
+4. 打开预览确认页，查看原路径、新路径、识别结果和建议动作。
+5. 勾选一项，点击执行勾选项，并确认弹窗。
+6. 打开任务日志页，查看操作日志。
+7. 打开回滚记录页，生成回滚预览，并确认回滚。
