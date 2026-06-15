@@ -1,3 +1,4 @@
+from app.clients.mock_pan115 import MockPan115Client
 from app.clients.pan115 import Pan115Client
 
 
@@ -24,6 +25,51 @@ class FakeRawClient:
     def fs_mkdir(self, payload, pid=0):
         self.calls.append(("fs_mkdir", payload, pid))
         return {"cid": "newdir", "file_name": payload["name"]}
+
+
+class FakeTreeRawClient(FakeRawClient):
+    def __init__(self):
+        super().__init__()
+        self.children = {
+            "0": [],
+            "101": [],
+            "102": [],
+        }
+        self.next_id = 101
+
+    def fs_files(self, payload):
+        self.calls.append(("fs_files", payload))
+        cid = str(payload["cid"])
+        return {"data": self.children.get(cid, [])}
+
+    def fs_mkdir(self, payload, pid=0):
+        parent_id = str(pid)
+        self.calls.append(("fs_mkdir", payload, parent_id))
+        dir_id = str(self.next_id)
+        self.next_id += 1
+        item = {"cid": dir_id, "n": payload["name"], "pid": parent_id, "fc": "0"}
+        self.children.setdefault(parent_id, []).append(item)
+        self.children.setdefault(dir_id, [])
+        return {"cid": dir_id, "file_name": payload["name"]}
+
+
+def test_pan115_ensure_dir_path_creates_missing_dirs():
+    raw = FakeTreeRawClient()
+    client = Pan115Client(cookie="UID=abc", raw_client=raw)
+
+    dir_id = client.ensure_dir_path("/电影/流浪地球", root_id="0")
+
+    assert dir_id == "102"
+    assert ("fs_mkdir", {"name": "电影"}, "0") in raw.calls
+    assert ("fs_mkdir", {"name": "流浪地球"}, "101") in raw.calls
+
+
+def test_mock_pan115_ensure_dir_path_uses_default_root_id():
+    client = MockPan115Client()
+
+    dir_id = client.ensure_dir_path("/电影")
+
+    assert client.get_path(dir_id) == "/电影"
 
 
 def test_pan115_adapter_maps_files_and_operations():

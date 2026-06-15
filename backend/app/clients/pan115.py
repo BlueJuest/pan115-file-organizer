@@ -25,6 +25,34 @@ class Pan115Client:
         items = response.get("data") or response.get("files") or []
         return [self._file(item, dir_id) for item in items]
 
+    def list_dir_recursive(self, dir_id: str) -> list[RemoteFile]:
+        files: list[RemoteFile] = []
+        seen: set[str] = set()
+
+        def collect(current_id: str) -> None:
+            if current_id in seen:
+                return
+            seen.add(current_id)
+            for file in self.list_dir(current_id):
+                files.append(file)
+                if file.is_dir:
+                    collect(file.file_id)
+
+        collect(dir_id)
+        return files
+
+    def ensure_dir_path(self, path: str, root_id: str = "0") -> str:
+        current_id = root_id
+        for name in [part for part in path.strip("/").split("/") if part]:
+            children = self.list_dir(current_id)
+            existing = next((file for file in children if file.is_dir and file.name == name), None)
+            if existing is None:
+                existing_dir = self.mkdir(current_id, name)
+                current_id = existing_dir.dir_id
+            else:
+                current_id = existing.file_id
+        return current_id
+
     def rename(self, file_id: str, new_name: str) -> OperationResult:
         response = self.raw.fs_rename({f"files_new_name[{file_id}]": new_name})
         return self._result(response, "重命名成功")
@@ -50,12 +78,15 @@ class Pan115Client:
         return ""
 
     def _file(self, item: dict[str, Any], fallback_parent_id: str) -> RemoteFile:
+        is_dir = item.get("is_dir")
+        if is_dir is None and "fc" in item:
+            is_dir = item.get("fc") == "0"
         return RemoteFile(
-            file_id=str(item.get("fid") or item.get("id") or ""),
+            file_id=str(item.get("fid") or item.get("cid") or item.get("id") or ""),
             name=str(item.get("n") or item.get("name") or ""),
             path=str(item.get("pc") or item.get("path") or ""),
-            parent_id=str(item.get("cid") or item.get("parent_id") or fallback_parent_id),
-            is_dir=bool(item.get("is_dir")),
+            parent_id=str(item.get("pid") or item.get("cid") or item.get("parent_id") or fallback_parent_id),
+            is_dir=bool(is_dir),
             size=int(item.get("s") or item.get("size") or 0),
         )
 

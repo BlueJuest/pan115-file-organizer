@@ -22,6 +22,34 @@ class MockPan115Client:
     def list_dir(self, dir_id: str) -> list[RemoteFile]:
         return [file for file in self._files.values() if file.parent_id == dir_id]
 
+    def list_dir_recursive(self, dir_id: str) -> list[RemoteFile]:
+        files: list[RemoteFile] = []
+        seen: set[str] = set()
+
+        def collect(current_id: str) -> None:
+            if current_id in seen:
+                return
+            seen.add(current_id)
+            for file in self.list_dir(current_id):
+                files.append(file)
+                if file.is_dir:
+                    collect(file.file_id)
+
+        collect(dir_id)
+        return files
+
+    def ensure_dir_path(self, path: str, root_id: str = "0") -> str:
+        current_id = root_id
+        for name in [part for part in path.strip("/").split("/") if part]:
+            children = self.list_dir(current_id)
+            existing = next((file for file in children if file.is_dir and file.name == name), None)
+            if existing is None:
+                existing_dir = self.mkdir(current_id, name)
+                current_id = existing_dir.dir_id
+            else:
+                current_id = existing.file_id
+        return current_id
+
     def rename(self, file_id: str, new_name: str) -> OperationResult:
         file = self._files.get(file_id)
         if file is None:
