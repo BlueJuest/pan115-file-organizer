@@ -84,7 +84,26 @@ def test_settings_masks_short_secrets(client: TestClient):
     assert "*" in body["tmdb_api_key_masked"]
 
 
-def test_settings_update_keeps_existing_secrets_when_omitted(client: TestClient):
+def test_settings_update_keeps_existing_secrets_when_omitted(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    class FakePan115:
+        def __init__(self, cookie: str) -> None:
+            self.cookie = cookie
+
+        def test_connection(self) -> bool:
+            return bool(self.cookie)
+
+    class FakeTmdb:
+        def __init__(self, api_key: str, language: str) -> None:
+            self.api_key = api_key
+            self.language = language
+
+        def search_movie(self, title: str, year: int | None) -> list:
+            return []
+
+    import app.api.settings as settings_api
+
+    monkeypatch.setattr(settings_api, "PAN115_CLIENT_CLASS", FakePan115)
+    monkeypatch.setattr(settings_api, "TMDB_CLIENT_CLASS", FakeTmdb)
     response = client.put(
         "/api/settings",
         json={
@@ -122,7 +141,26 @@ def test_settings_update_keeps_existing_secrets_when_omitted(client: TestClient)
     assert response_tmdb.json()["ok"] is True
 
 
-def test_settings_update_keeps_existing_secrets_when_empty_strings(client: TestClient):
+def test_settings_update_keeps_existing_secrets_when_empty_strings(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    class FakePan115:
+        def __init__(self, cookie: str) -> None:
+            self.cookie = cookie
+
+        def test_connection(self) -> bool:
+            return bool(self.cookie)
+
+    class FakeTmdb:
+        def __init__(self, api_key: str, language: str) -> None:
+            self.api_key = api_key
+            self.language = language
+
+        def search_movie(self, title: str, year: int | None) -> list:
+            return []
+
+    import app.api.settings as settings_api
+
+    monkeypatch.setattr(settings_api, "PAN115_CLIENT_CLASS", FakePan115)
+    monkeypatch.setattr(settings_api, "TMDB_CLIENT_CLASS", FakeTmdb)
     response = client.put(
         "/api/settings",
         json={

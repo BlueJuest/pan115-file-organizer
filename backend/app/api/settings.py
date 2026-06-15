@@ -1,11 +1,17 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.clients.pan115 import Pan115Client
+from app.clients.tmdb import TmdbClient
 from app.core.database import get_db
 from app.core.security import mask_secret
 from app.models.settings import AppSetting
 from app.schemas.common import TestResult
 from app.schemas.settings import SettingsRead, SettingsUpdate
+from app.services.client_factory import ClientConfigError, ClientFactory
+
+PAN115_CLIENT_CLASS = Pan115Client
+TMDB_CLIENT_CLASS = TmdbClient
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -61,15 +67,24 @@ def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)) -> S
 
 @router.post("/test-115", response_model=TestResult)
 def test_115(db: Session = Depends(get_db)) -> TestResult:
-    settings = get_or_create_settings(db)
-    if not settings.pan115_cookie:
-        return TestResult(ok=False, message="115 cookie 未配置")
-    return TestResult(ok=True, message="115 cookie 已配置")
+    try:
+        ok = ClientFactory(db, pan115_cls=PAN115_CLIENT_CLASS).pan115().test_connection()
+    except ClientConfigError as exc:
+        return TestResult(ok=False, message=str(exc))
+    except Exception:
+        return TestResult(ok=False, message="115 连接失败")
+    if not ok:
+        return TestResult(ok=False, message="115 连接失败")
+    return TestResult(ok=True, message="115 连接成功")
 
 
 @router.post("/test-tmdb", response_model=TestResult)
 def test_tmdb(db: Session = Depends(get_db)) -> TestResult:
-    settings = get_or_create_settings(db)
-    if not settings.tmdb_api_key:
-        return TestResult(ok=False, message="TMDB API key 未配置")
-    return TestResult(ok=True, message="TMDB API key 已配置")
+    client = ClientFactory(db, tmdb_cls=TMDB_CLIENT_CLASS).tmdb()
+    if client is None:
+        return TestResult(ok=False, message="未配置 TMDB API Key")
+    try:
+        client.search_movie("test", None)
+    except Exception:
+        return TestResult(ok=False, message="TMDB 连接失败")
+    return TestResult(ok=True, message="TMDB 连接成功")
