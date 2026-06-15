@@ -61,8 +61,6 @@ class PreviewBuilder:
         recursive: bool,
         rules: list[RenameRuleInput],
     ) -> PreviewBuildResult:
-        del target_dir
-
         files = self._collect_files(source_dir_id, recursive)
         items: list[PreviewBuildItem] = []
         recognized_count = 0
@@ -102,11 +100,12 @@ class PreviewBuilder:
                 items.append(self._error_item(file, identified.media_type, error_message))
                 continue
 
+            final_path = self._with_target_dir(render.path, target_dir)
             items.append(
                 PreviewBuildItem(
                     file_id=file.file_id,
                     original_path=file.path,
-                    new_path=render.path,
+                    new_path=final_path,
                     file_size=file.size,
                     media_type=identified.media_type,
                     title=identified.title_cn,
@@ -114,13 +113,13 @@ class PreviewBuilder:
                     season=self._int_or_none(rule_match.fields.get("season")),
                     episode=self._int_or_none(rule_match.fields.get("episode")),
                     tmdb_id=identified.tmdb_id,
-                    tmdb_title=identified.title_original,
+                    tmdb_title=identified.title_cn,
                     confidence=identified.confidence,
                     matched_rule_id=rule_match.rule_id,
                     quality_score=0,
                     conflict_status="none",
                     upgrade_suggestion="none",
-                    final_action="rename_move" if render.path != file.path else "skip",
+                    final_action="rename_move" if final_path != file.path else "skip",
                     status=identified.status,
                 )
             )
@@ -133,15 +132,21 @@ class PreviewBuilder:
         )
 
     def _collect_files(self, source_dir_id: str, recursive: bool) -> list[RemoteFile]:
-        files: list[RemoteFile] = []
-        for item in self.pan_client.list_dir(source_dir_id):
-            if item.is_dir:
-                if recursive:
-                    files.extend(self._collect_files(item.file_id, recursive))
-                continue
-            if self._is_video_file(item.name):
-                files.append(item)
-        return files
+        if recursive and hasattr(self.pan_client, "list_dir_recursive"):
+            items = self.pan_client.list_dir_recursive(source_dir_id)
+        else:
+            items = self.pan_client.list_dir(source_dir_id)
+
+        return [
+            item
+            for item in items
+            if not item.is_dir and self._is_video_file(item.name)
+        ]
+
+    def _with_target_dir(self, path: str, target_dir: str) -> str:
+        if path.startswith("/"):
+            return path
+        return f"{target_dir.rstrip('/')}/{path.lstrip('/')}"
 
     def _is_video_file(self, filename: str) -> bool:
         extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""

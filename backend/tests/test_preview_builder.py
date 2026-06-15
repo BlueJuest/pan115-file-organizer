@@ -166,6 +166,75 @@ def test_preview_builder_counts_need_confirm_identifier_result():
     assert result.items[0].status == "need_confirm"
 
 
+def relative_movie_rule() -> RenameRuleInput:
+    return RenameRuleInput(
+        id=2,
+        name="电影相对路径规则",
+        media_type="movie",
+        pattern=r"(?P<title>.+?) (?P<year>20\d{2}) (?P<resolution>\d{3,4}p)",
+        template="{title_cn} ({year})/{title_cn} ({year}) - {resolution}.{ext}",
+        priority=1,
+        enabled=True,
+    )
+
+
+def test_preview_builder_prefixes_relative_template_with_target_dir():
+    pan_client = MockPan115Client(
+        [
+            RemoteFile("root", "root", "/", "", True),
+            RemoteFile("src", "下载", "/下载", "root", True),
+            RemoteFile(
+                "f1",
+                "流浪地球 2019 2160p.mkv",
+                "/下载/流浪地球 2019 2160p.mkv",
+                "src",
+                False,
+                12000,
+            ),
+        ]
+    )
+    builder = PreviewBuilder(pan_client=pan_client, identifier=FakeIdentifier())
+
+    result = builder.build(
+        source_dir_id="src",
+        target_dir="/归档/电影",
+        media_type="movie",
+        recursive=False,
+        rules=[relative_movie_rule()],
+    )
+
+    assert result.items[0].new_path == "/归档/电影/流浪地球 (2019)/流浪地球 (2019) - 2160p.mkv"
+
+
+def test_preview_builder_skips_relative_template_when_final_path_matches_original():
+    pan_client = MockPan115Client(
+        [
+            RemoteFile("root", "root", "/", "", True),
+            RemoteFile("src", "电影", "/电影", "root", True),
+            RemoteFile(
+                "f1",
+                "流浪地球 2019 2160p.mkv",
+                "/电影/流浪地球 (2019)/流浪地球 (2019) - 2160p.mkv",
+                "src",
+                False,
+                12000,
+            ),
+        ]
+    )
+    builder = PreviewBuilder(pan_client=pan_client, identifier=FakeIdentifier())
+
+    result = builder.build(
+        source_dir_id="src",
+        target_dir="/电影",
+        media_type="movie",
+        recursive=False,
+        rules=[relative_movie_rule()],
+    )
+
+    assert result.items[0].new_path == result.items[0].original_path
+    assert result.items[0].final_action == "skip"
+
+
 def test_preview_builder_does_not_enter_subdirectories_when_not_recursive():
     pan_client = MockPan115Client(
         [

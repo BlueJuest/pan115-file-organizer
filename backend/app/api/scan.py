@@ -2,16 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.clients.mock_pan115 import MockPan115Client
-from app.clients.protocols import RemoteFile
 from app.core.database import get_db
 from app.models import PreviewItem, RenameRule, ScanBatch
 from app.schemas.scan import PreviewItemRead, PreviewItemUpdate, ScanCreate, ScanRead
+from app.services.client_factory import ClientConfigError, ClientFactory
 from app.services.media_identifier import MediaIdentifier
 from app.services.preview_builder import PreviewBuilder
 from app.services.rule_engine import RenameRuleInput
 
 router = APIRouter(prefix="/api", tags=["scans"])
+CLIENT_FACTORY_CLASS = ClientFactory
 
 
 def scan_to_read(scan: ScanBatch) -> ScanRead:
@@ -72,19 +72,16 @@ def _rule_inputs(db: Session) -> list[RenameRuleInput]:
     ]
 
 
-def _scan_client() -> MockPan115Client:
-    return MockPan115Client(
-        [
-            RemoteFile("root", "", "/", "", True),
-            RemoteFile("src", "src", "/src", "root", True),
-            RemoteFile("f1", "流浪地球 2019 2160p WEB-DL.mkv", "/src/流浪地球 2019 2160p WEB-DL.mkv", "src", False, 1024),
-        ]
-    )
-
-
 @router.post("/scans", response_model=ScanRead)
 def create_scan(payload: ScanCreate, db: Session = Depends(get_db)) -> ScanRead:
-    result = PreviewBuilder(_scan_client(), MediaIdentifier()).build(
+    try:
+        factory = CLIENT_FACTORY_CLASS(db)
+        pan_client = factory.pan115()
+        tmdb_client = factory.tmdb()
+    except ClientConfigError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    result = PreviewBuilder(pan_client, MediaIdentifier(tmdb_client=tmdb_client)).build(
         payload.source_dir,
         payload.target_dir,
         payload.media_type,

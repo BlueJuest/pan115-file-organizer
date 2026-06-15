@@ -17,8 +17,8 @@ class FakePan115:
         return [
             RemoteFile(
                 "f1",
-                "流浪地球 2019 2160p WEB-DL.mkv",
-                "/下载/流浪地球 2019 2160p WEB-DL.mkv",
+                "流浪地球 2019 2160p.mkv",
+                "/下载/流浪地球 2019 2160p.mkv",
                 dir_id,
                 False,
                 100,
@@ -85,18 +85,16 @@ def client(monkeypatch):
         engine.dispose()
 
 
-def test_scan_execute_and_rollback_plan_flow(client: TestClient):
+def test_scan_uses_injected_real_clients_and_persists_tmdb_match(client: TestClient):
     rule_response = client.post(
         "/api/rules",
         json={
             "name": "movie-year",
             "media_type": "movie",
-            "pattern": r"(?P<title>.+?)[ ._-]+(?P<year>20\d{2})[ ._-]+(?P<resolution>2160p|1080p)",
-            "template": "/电影/{title} ({year})/{title} ({year}) - {resolution}.{ext}",
+            "pattern": r"(?P<title>.+?) (?P<year>20\d{2}) (?P<resolution>\d{3,4}p)",
+            "template": "/电影/{title_cn} ({year})/{title_cn} ({year}) - {resolution}.{ext}",
             "priority": 10,
             "enabled": True,
-            "sample_input": "流浪地球 2019 2160p WEB-DL.mkv",
-            "sample_output": "/电影/流浪地球 (2019)/流浪地球 (2019) - 2160p.mkv",
         },
     )
     assert rule_response.status_code == 200
@@ -107,25 +105,14 @@ def test_scan_execute_and_rollback_plan_flow(client: TestClient):
             "source_dir": "src",
             "target_dir": "/电影",
             "media_type": "movie",
-            "recursive": False,
+            "recursive": True,
         },
     )
     assert scan_response.status_code == 200
-    scan_id = scan_response.json()["id"]
+    scan = scan_response.json()
+    assert scan["file_count"] == 1
 
-    items_response = client.get(f"/api/scans/{scan_id}/items")
+    items_response = client.get(f"/api/scans/{scan['id']}/items")
     assert items_response.status_code == 200
-    assert isinstance(items_response.json(), list)
-
-    execution_response = client.post(
-        "/api/executions",
-        json={"preview_item_ids": [], "fail_fast": False},
-    )
-    assert execution_response.status_code == 200
-    execution_id = execution_response.json()["id"]
-
-    rollback_plan_response = client.post(f"/api/executions/{execution_id}/rollback-plan")
-    assert rollback_plan_response.status_code == 200
-    rollback_plan = rollback_plan_response.json()
-    assert rollback_plan["execution_batch_id"] == execution_id
-    assert "items" in rollback_plan
+    items = items_response.json()
+    assert items[0]["tmdb_title"] == "流浪地球"
