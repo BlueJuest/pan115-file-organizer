@@ -1,3 +1,4 @@
+import httpx
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -31,6 +32,9 @@ def to_read(settings: AppSetting) -> SettingsRead:
         pan115_cookie_masked=mask_secret(settings.pan115_cookie),
         tmdb_api_key_masked=mask_secret(settings.tmdb_api_key),
         tmdb_language=settings.tmdb_language,
+        telegram_bot_token_masked=mask_secret(settings.telegram_bot_token),
+        telegram_channel_id=settings.telegram_channel_id or "",
+        default_share_user=settings.default_share_user or "",
         default_source_dir=settings.default_source_dir,
         default_target_dir=settings.default_target_dir,
         default_recycle_dir=settings.default_recycle_dir,
@@ -52,7 +56,12 @@ def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)) -> S
         settings.pan115_cookie = payload.pan115_cookie
     if payload.tmdb_api_key:
         settings.tmdb_api_key = payload.tmdb_api_key
+    if payload.telegram_bot_token:
+        settings.telegram_bot_token = payload.telegram_bot_token
+    if payload.telegram_channel_id:
+        settings.telegram_channel_id = payload.telegram_channel_id
     settings.tmdb_language = payload.tmdb_language
+    settings.default_share_user = payload.default_share_user
     settings.default_source_dir = payload.default_source_dir
     settings.default_target_dir = payload.default_target_dir
     settings.default_recycle_dir = payload.default_recycle_dir
@@ -85,6 +94,12 @@ def test_tmdb(db: Session = Depends(get_db)) -> TestResult:
         return TestResult(ok=False, message="未配置 TMDB API Key")
     try:
         client.search_movie("test", None)
-    except Exception:
-        return TestResult(ok=False, message="TMDB 连接失败")
+    except httpx.HTTPStatusError as exc:
+        return TestResult(ok=False, message=f"TMDB 连接失败: HTTP {exc.response.status_code}")
+    except httpx.TimeoutException:
+        return TestResult(ok=False, message="TMDB 连接失败: Timeout")
+    except httpx.RequestError as exc:
+        return TestResult(ok=False, message=f"TMDB 连接失败: {exc.__class__.__name__}: {exc}")
+    except Exception as exc:
+        return TestResult(ok=False, message=f"TMDB 连接失败: {exc.__class__.__name__}")
     return TestResult(ok=True, message="TMDB 连接成功")

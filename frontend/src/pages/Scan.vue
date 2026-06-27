@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { apiSend } from '../api/client'
+import DirectoryPicker from '../components/DirectoryPicker.vue'
 
 interface ScanRead {
   id: number
@@ -10,8 +11,8 @@ interface ScanRead {
 
 const router = useRouter()
 const form = reactive({
-  source_dir: 'src',
-  target_dir: '/电影',
+  source_dir: '0',
+  target_dir: '/Movies',
   media_type: 'movie',
   recursive: false,
 })
@@ -23,10 +24,10 @@ async function startScan() {
   message.value = ''
   try {
     const scan = await apiSend<ScanRead>('/api/scans', 'POST', form)
-    message.value = `扫描完成：批次 ${scan.id}`
+    message.value = `Scan complete: batch ${scan.id}`
     await router.push(`/preview/${scan.id}`)
   } catch (error) {
-    message.value = `扫描失败：${(error as Error).message}`
+    message.value = `Scan failed: ${(error as Error).message}`
   } finally {
     scanning.value = false
   }
@@ -38,27 +39,20 @@ async function startScan() {
     <header class="page-header">
       <div>
         <p class="eyebrow">Scan</p>
-        <h2>目录扫描</h2>
-        <p class="hint">选择源目录和目标目录，生成可确认的整理预览。</p>
-        <p class="hint">扫描阶段只读取真实 115 目录，不会改名、移动或删除。</p>
+        <h2>Directory scan</h2>
+        <p class="hint">Choose source and target directories, then generate a preview before any real 115 operation.</p>
       </div>
     </header>
 
     <form class="form-grid" @submit.prevent="startScan">
       <div class="two-columns">
-        <label class="form-row">
-          <span>源目录</span>
-          <input v-model="form.source_dir" required placeholder="src" />
-        </label>
-        <label class="form-row">
-          <span>目标目录</span>
-          <input v-model="form.target_dir" required placeholder="/电影" />
-        </label>
+        <DirectoryPicker v-model="form.source_dir" label="Source directory" placeholder="0" value-mode="id" />
+        <DirectoryPicker v-model="form.target_dir" label="Target directory" placeholder="/Movies" value-mode="path" />
       </div>
 
       <div class="two-columns">
         <label class="form-row">
-          <span>媒体类型</span>
+          <span>Media type</span>
           <select v-model="form.media_type">
             <option value="movie">movie</option>
             <option value="tv">tv</option>
@@ -67,12 +61,12 @@ async function startScan() {
         </label>
         <label class="check-row">
           <input v-model="form.recursive" type="checkbox" />
-          <span>递归扫描子目录</span>
+          <span>Scan subdirectories recursively</span>
         </label>
       </div>
 
       <div class="actions">
-        <button type="submit" :disabled="scanning">{{ scanning ? '扫描中...' : '读取真实 115 目录并生成预览' }}</button>
+        <button type="submit" :disabled="scanning">{{ scanning ? 'Scanning...' : 'Read 115 directory and generate preview' }}</button>
       </div>
       <p v-if="message" class="message">{{ message }}</p>
     </form>

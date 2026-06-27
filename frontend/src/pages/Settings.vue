@@ -2,11 +2,13 @@
 import { onMounted, reactive, ref } from 'vue'
 
 import { apiGet, apiSend } from '../api/client'
+import DirectoryPicker from '../components/DirectoryPicker.vue'
 import type { SettingsRead } from '../api/types'
 
-type SettingsForm = Omit<SettingsRead, 'id' | 'pan115_cookie_masked' | 'tmdb_api_key_masked'> & {
+type SettingsForm = Omit<SettingsRead, 'id' | 'pan115_cookie_masked' | 'tmdb_api_key_masked' | 'telegram_bot_token_masked'> & {
   pan115_cookie: string
   tmdb_api_key: string
+  telegram_bot_token: string
 }
 
 interface TestResult {
@@ -17,7 +19,10 @@ interface TestResult {
 const form = reactive<SettingsForm>({
   pan115_cookie: '',
   tmdb_api_key: '',
+  telegram_bot_token: '',
   tmdb_language: 'zh-CN',
+  telegram_channel_id: '',
+  default_share_user: '',
   default_source_dir: '0',
   default_target_dir: '0',
   default_recycle_dir: '0',
@@ -28,6 +33,7 @@ const form = reactive<SettingsForm>({
 const masked = reactive({
   pan115_cookie: '',
   tmdb_api_key: '',
+  telegram_bot_token: '',
 })
 
 const loading = ref(false)
@@ -41,6 +47,9 @@ async function loadSettings() {
     const settings = await apiGet<SettingsRead>('/api/settings')
     masked.pan115_cookie = settings.pan115_cookie_masked
     masked.tmdb_api_key = settings.tmdb_api_key_masked
+    masked.telegram_bot_token = settings.telegram_bot_token_masked
+    form.telegram_channel_id = settings.telegram_channel_id
+    form.default_share_user = settings.default_share_user
     form.tmdb_language = settings.tmdb_language
     form.default_source_dir = settings.default_source_dir
     form.default_target_dir = settings.default_target_dir
@@ -48,7 +57,7 @@ async function loadSettings() {
     form.allow_delete_old_files = settings.allow_delete_old_files
     form.recursive_scan = settings.recursive_scan
   } catch (error) {
-    message.value = `加载配置失败：${(error as Error).message}`
+    message.value = `Failed to load settings: ${(error as Error).message}`
   } finally {
     loading.value = false
   }
@@ -58,15 +67,29 @@ async function saveSettings() {
   saving.value = true
   message.value = ''
   try {
-    const payload = { ...form }
+    const payload = {
+      pan115_cookie: form.pan115_cookie,
+      tmdb_api_key: form.tmdb_api_key,
+      tmdb_language: form.tmdb_language,
+      telegram_bot_token: form.telegram_bot_token,
+      telegram_channel_id: form.telegram_channel_id,
+      default_share_user: form.default_share_user,
+      default_source_dir: form.default_source_dir,
+      default_target_dir: form.default_target_dir,
+      default_recycle_dir: form.default_recycle_dir,
+      allow_delete_old_files: form.allow_delete_old_files,
+      recursive_scan: form.recursive_scan,
+    }
     const settings = await apiSend<SettingsRead>('/api/settings', 'PUT', payload)
     masked.pan115_cookie = settings.pan115_cookie_masked
     masked.tmdb_api_key = settings.tmdb_api_key_masked
+    masked.telegram_bot_token = settings.telegram_bot_token_masked
     form.pan115_cookie = ''
     form.tmdb_api_key = ''
-    message.value = '配置已保存'
+    form.telegram_bot_token = ''
+    message.value = 'Settings saved'
   } catch (error) {
-    message.value = `保存配置失败：${(error as Error).message}`
+    message.value = `Failed to save settings: ${(error as Error).message}`
   } finally {
     saving.value = false
   }
@@ -79,7 +102,7 @@ async function testConnection(kind: '115' | 'tmdb') {
     const result = await apiSend<TestResult>(url, 'POST')
     message.value = result.message
   } catch (error) {
-    message.value = `测试连接失败：${(error as Error).message}`
+    message.value = `Connection test failed: ${(error as Error).message}`
   }
 }
 
@@ -91,64 +114,71 @@ onMounted(loadSettings)
     <header class="page-header">
       <div>
         <p class="eyebrow">Settings</p>
-        <h2>系统配置</h2>
-        <p class="hint">维护 115、TMDB 与默认目录参数。留空密钥输入框可保留现有密钥。</p>
+        <h2>System settings</h2>
+        <p class="hint">Manage 115, TMDB, and default directory values. Empty secret fields keep the current saved value.</p>
       </div>
-      <button class="secondary" type="button" :disabled="loading" @click="loadSettings">重新加载</button>
+      <button class="secondary" type="button" :disabled="loading" @click="loadSettings">Reload</button>
     </header>
 
     <div class="risk-panel">
-      <strong>真实操作模式</strong>
-      <p>保存 115 Cookie 后，扫描、改名、移动和删除会作用于真实 115 网盘。请确认 Cookie 来源可信。</p>
+      <strong>Real operation mode</strong>
+      <p>After saving a 115 Cookie, scans and confirmed operations read from your real 115 drive. Preview remains required before changes run.</p>
     </div>
 
     <form class="form-grid" @submit.prevent="saveSettings">
       <label class="form-row">
         <span>115 Cookie</span>
-        <input v-model="form.pan115_cookie" type="password" placeholder="输入新的 115 Cookie" autocomplete="off" />
-        <small>当前：{{ masked.pan115_cookie || '未配置' }}</small>
+        <input v-model="form.pan115_cookie" type="password" placeholder="Enter a new 115 Cookie" autocomplete="off" />
+        <small>Current: {{ masked.pan115_cookie || 'Not configured' }}</small>
       </label>
 
       <label class="form-row">
         <span>TMDB API Key</span>
-        <input v-model="form.tmdb_api_key" type="password" placeholder="输入新的 TMDB API Key" autocomplete="off" />
-        <small>当前：{{ masked.tmdb_api_key || '未配置' }}</small>
+        <input v-model="form.tmdb_api_key" type="password" placeholder="Enter a new TMDB API Key" autocomplete="off" />
+        <small>Current: {{ masked.tmdb_api_key || 'Not configured' }}</small>
       </label>
 
       <label class="form-row">
-        <span>TMDB 语言</span>
+        <span>TMDB language</span>
         <input v-model="form.tmdb_language" placeholder="zh-CN" />
       </label>
 
       <div class="directory-grid">
         <label class="form-row">
-          <span>默认源目录 ID</span>
-          <input v-model="form.default_source_dir" placeholder="0" />
+          <span>Telegram bot token</span>
+          <input v-model="form.telegram_bot_token" type="password" placeholder="Enter a new bot token" autocomplete="off" />
+          <small>Current: {{ masked.telegram_bot_token || 'Not configured' }}</small>
         </label>
         <label class="form-row">
-          <span>默认目标目录 ID</span>
-          <input v-model="form.default_target_dir" placeholder="0" />
+          <span>Telegram channel ID</span>
+          <input v-model="form.telegram_channel_id" placeholder="@channel or -100..." />
         </label>
         <label class="form-row">
-          <span>默认回收目录 ID</span>
-          <input v-model="form.default_recycle_dir" placeholder="0" />
+          <span>Default share user</span>
+          <input v-model="form.default_share_user" placeholder="Uploader name" />
         </label>
+      </div>
+
+      <div class="directory-grid">
+        <DirectoryPicker v-model="form.default_source_dir" label="Default source directory" placeholder="0" value-mode="id" />
+        <DirectoryPicker v-model="form.default_target_dir" label="Default target directory" placeholder="0" value-mode="id" />
+        <DirectoryPicker v-model="form.default_recycle_dir" label="Default recycle directory" placeholder="0" value-mode="id" />
       </div>
 
       <label class="check-row">
         <input v-model="form.allow_delete_old_files" type="checkbox" />
-        <span>允许删除旧文件</span>
+        <span>Allow deleting old files</span>
       </label>
 
       <label class="check-row">
         <input v-model="form.recursive_scan" type="checkbox" />
-        <span>递归扫描目录</span>
+        <span>Scan directories recursively by default</span>
       </label>
 
       <div class="actions">
-        <button type="submit" :disabled="saving">{{ saving ? '保存中...' : '保存配置' }}</button>
-        <button class="secondary" type="button" @click="testConnection('115')">测试 115 连接</button>
-        <button class="secondary" type="button" @click="testConnection('tmdb')">测试 TMDB 连接</button>
+        <button type="submit" :disabled="saving">{{ saving ? 'Saving...' : 'Save settings' }}</button>
+        <button class="secondary" type="button" @click="testConnection('115')">Test 115</button>
+        <button class="secondary" type="button" @click="testConnection('tmdb')">Test TMDB</button>
       </div>
 
       <p v-if="message" class="message">{{ message }}</p>

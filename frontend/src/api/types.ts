@@ -3,11 +3,56 @@ export interface SettingsRead {
   pan115_cookie_masked: string
   tmdb_api_key_masked: string
   tmdb_language: string
+  telegram_bot_token_masked: string
+  telegram_channel_id: string
+  default_share_user: string
   default_source_dir: string
   default_target_dir: string
   default_recycle_dir: string
   allow_delete_old_files: boolean
   recursive_scan: boolean
+}
+
+export interface SubmissionMediaDetails {
+  tmdb_id: number
+  media_type: string
+  title: string
+  original_title: string
+  year: number | null
+  overview: string
+  poster_path: string
+  backdrop_path: string
+  vote_average: number | null
+  genres: string[]
+}
+
+export interface SubmissionPreviewResponse {
+  share_url: string
+  receive_code: string | null
+  folder_name: string
+  parsed_title: string
+  parsed_year: number | null
+  media: SubmissionMediaDetails
+  quality: string
+  video_source: string
+  subtitles: string
+  custom_content: string
+  share_user: string
+  share_user_url: string
+  douban_rating: string
+  douban_url: string
+  total_size: number
+  size_text: string
+  image_url: string
+  image_base64: string
+  mime_type: string
+  caption: string
+}
+
+export interface SubmissionPublishResponse {
+  ok: boolean
+  message: string
+  telegram_message_id: string
 }
 
 export interface RenameRuleRead {

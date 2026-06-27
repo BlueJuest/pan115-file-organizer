@@ -14,11 +14,16 @@ from app.models.base import Base
 
 class FakePan115:
     def list_dir(self, dir_id: str) -> list[RemoteFile]:
+        if dir_id == "0":
+            return [
+                RemoteFile("movies", "Movies", "/Movies", "0", True, 0),
+                RemoteFile("f-root", "Loose 2024.mkv", "/Loose 2024.mkv", "0", False, 100),
+            ]
         return [
             RemoteFile(
                 "f1",
-                "流浪地球 2019 2160p.mkv",
-                "/下载/流浪地球 2019 2160p.mkv",
+                "Avatar 2009 2160p.mkv",
+                "/Downloads/Avatar 2009 2160p.mkv",
                 dir_id,
                 False,
                 100,
@@ -33,11 +38,11 @@ class FakeTmdb:
     def search_movie(self, title: str, year: int | None) -> list[TmdbCandidate]:
         return [
             TmdbCandidate(
-                535167,
+                19995,
                 "movie",
-                "流浪地球",
-                "The Wandering Earth",
-                2019,
+                "Avatar",
+                "Avatar",
+                2009,
                 0.95,
             )
         ]
@@ -92,7 +97,7 @@ def test_scan_uses_injected_real_clients_and_persists_tmdb_match(client: TestCli
             "name": "movie-year",
             "media_type": "movie",
             "pattern": r"(?P<title>.+?) (?P<year>20\d{2}) (?P<resolution>\d{3,4}p)",
-            "template": "/电影/{title_cn} ({year})/{title_cn} ({year}) - {resolution}.{ext}",
+            "template": "/Movies/{title_cn} ({year})/{title_cn} ({year}) - {resolution}.{ext}",
             "priority": 10,
             "enabled": True,
         },
@@ -103,7 +108,7 @@ def test_scan_uses_injected_real_clients_and_persists_tmdb_match(client: TestCli
         "/api/scans",
         json={
             "source_dir": "src",
-            "target_dir": "/电影",
+            "target_dir": "/Movies",
             "media_type": "movie",
             "recursive": True,
         },
@@ -115,4 +120,51 @@ def test_scan_uses_injected_real_clients_and_persists_tmdb_match(client: TestCli
     items_response = client.get(f"/api/scans/{scan['id']}/items")
     assert items_response.status_code == 200
     items = items_response.json()
-    assert items[0]["tmdb_title"] == "流浪地球"
+    assert items[0]["tmdb_title"] == "Avatar"
+
+
+def test_scan_renders_moviepilot_jinja_fields(client: TestClient):
+    rule_response = client.post(
+        "/api/rules",
+        json={
+            "name": "moviepilot-movie",
+            "media_type": "movie",
+            "pattern": r"(?P<title>.+?) (?P<year>20\d{2}) (?P<videoFormat>\d{3,4}p)",
+            "template": "{{title}}{% if year %} ({{year}}){% endif %}/{{title}}{% if videoFormat %} - {{videoFormat}}{% endif %}{{fileExt}}",
+            "priority": 10,
+            "enabled": True,
+        },
+    )
+    assert rule_response.status_code == 200
+
+    scan_response = client.post(
+        "/api/scans",
+        json={
+            "source_dir": "src",
+            "target_dir": "/Movies",
+            "media_type": "movie",
+            "recursive": True,
+        },
+    )
+    assert scan_response.status_code == 200
+
+    scan = scan_response.json()
+    items_response = client.get(f"/api/scans/{scan['id']}/items")
+    assert items_response.status_code == 200
+    items = items_response.json()
+    assert items[0]["new_path"].endswith("/Movies/Avatar (2009)/Avatar - 2160p.mkv")
+
+
+def test_directory_browser_lists_realtime_115_directory(client: TestClient):
+    response = client.get("/api/directories?parent_id=0")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": "movies",
+            "name": "Movies",
+            "path": "/Movies",
+            "parent_id": "0",
+            "is_dir": True,
+        }
+    ]

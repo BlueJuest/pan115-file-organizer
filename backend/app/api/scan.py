@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import PreviewItem, RenameRule, ScanBatch
-from app.schemas.scan import PreviewItemRead, PreviewItemUpdate, ScanCreate, ScanRead
+from app.schemas.scan import DirectoryItemRead, PreviewItemRead, PreviewItemUpdate, ScanCreate, ScanRead
 from app.services.client_factory import ClientConfigError, ClientFactory
 from app.services.media_identifier import MediaIdentifier
 from app.services.preview_builder import PreviewBuilder
@@ -130,6 +130,27 @@ def create_scan(payload: ScanCreate, db: Session = Depends(get_db)) -> ScanRead:
     db.commit()
     db.refresh(scan)
     return scan_to_read(scan)
+
+
+@router.get("/directories", response_model=list[DirectoryItemRead])
+def list_directories(parent_id: str = "0", db: Session = Depends(get_db)) -> list[DirectoryItemRead]:
+    try:
+        pan_client = CLIENT_FACTORY_CLASS(db).pan115()
+    except ClientConfigError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    items = pan_client.list_dir(parent_id)
+    return [
+        DirectoryItemRead(
+            id=item.file_id,
+            name=item.name,
+            path=item.path,
+            parent_id=item.parent_id,
+            is_dir=item.is_dir,
+        )
+        for item in items
+        if item.is_dir
+    ]
 
 
 @router.get("/scans/{scan_id}", response_model=ScanRead)

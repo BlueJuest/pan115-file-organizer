@@ -91,6 +91,7 @@ class PreviewBuilder:
                 "title_original": identified.title_original,
                 "year": identified.year or parsed.year or "",
             }
+            fields.update(self._moviepilot_fields(file, fields))
             render = self.template_engine.render(rule_match.template, fields)
             if not render.ok:
                 need_confirm_count += 1
@@ -151,6 +152,26 @@ class PreviewBuilder:
     def _is_video_file(self, filename: str) -> bool:
         extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
         return extension in VIDEO_EXTENSIONS
+
+    def _moviepilot_fields(self, file: RemoteFile, fields: dict[str, object]) -> dict[str, object]:
+        extension = file.name.rsplit(".", 1)[-1] if "." in file.name else ""
+        season = self._int_or_none(fields.get("season"))
+        episode = self._int_or_none(fields.get("episode"))
+        return {
+            "title": fields.get("title_cn") or fields.get("title") or "",
+            "originalTitle": fields.get("title_original") or fields.get("title") or "",
+            "fileExt": f".{extension}" if extension else "",
+            "videoFormat": fields.get("videoFormat") or fields.get("resolution") or "",
+            "season": f"{season:02d}" if season is not None else fields.get("season", ""),
+            "episode": f"{episode:02d}" if episode is not None else fields.get("episode", ""),
+            "season_episode": self._season_episode(season, episode),
+            "part": fields.get("part", ""),
+        }
+
+    def _season_episode(self, season: int | None, episode: int | None) -> str:
+        if season is None or episode is None:
+            return ""
+        return f"S{season:02d}E{episode:02d}"
 
     def _error_item(self, file: RemoteFile, media_type: str, error_message: str) -> PreviewBuildItem:
         return PreviewBuildItem(

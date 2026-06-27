@@ -46,7 +46,16 @@ class TmdbClient:
             params={"api_key": self.api_key, "language": self.language},
         )
         response.raise_for_status()
-        return self._to_candidate(response.json(), normalized_type, "", None, 0, confidence=1.0)
+        item = response.json()
+        if not item.get("overview") and self.language != "en-US":
+            fallback_response = self.client.get(
+                f"/{normalized_type}/{tmdb_id}",
+                params={"api_key": self.api_key, "language": "en-US"},
+            )
+            fallback_response.raise_for_status()
+            fallback_item = fallback_response.json()
+            item["overview"] = fallback_item.get("overview") or ""
+        return self._to_candidate(item, normalized_type, "", None, 0, confidence=1.0)
 
     def _normalize_media_type(self, media_type: str) -> str:
         if media_type == "movie":
@@ -81,6 +90,9 @@ class TmdbClient:
             ),
             overview=item.get("overview") or "",
             poster_path=item.get("poster_path") or "",
+            backdrop_path=item.get("backdrop_path") or "",
+            vote_average=item.get("vote_average"),
+            genres=[str(genre.get("name")) for genre in item.get("genres", []) if genre.get("name")],
         )
 
     def _calculate_confidence(

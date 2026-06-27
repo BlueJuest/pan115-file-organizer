@@ -35,6 +35,9 @@ class TmdbCandidate:
     confidence: float
     overview: str = ""
     poster_path: str = ""
+    backdrop_path: str = ""
+    vote_average: float | None = None
+    genres: list[str] | None = None
 
 
 class Pan115ClientProtocol(Protocol):

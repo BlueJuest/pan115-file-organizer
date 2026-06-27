@@ -8,6 +8,7 @@
       <RouterLink to="/quality">洗版策略</RouterLink>
       <RouterLink to="/scan">目录扫描</RouterLink>
       <RouterLink to="/preview">预览确认</RouterLink>
+      <RouterLink to="/submission">投稿生成</RouterLink>
       <RouterLink to="/logs">任务日志</RouterLink>
       <RouterLink to="/rollback">回滚记录</RouterLink>
     </aside>
@@ -21,3 +22,4 @@
     </main>
   </div>
 </template>
+

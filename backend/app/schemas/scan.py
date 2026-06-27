@@ -10,6 +10,14 @@ class ScanCreate(BaseModel):
     recursive: bool = True
 
 
+class DirectoryItemRead(BaseModel):
+    id: str
+    name: str
+    path: str
+    parent_id: str
+    is_dir: bool
+
+
 class ScanRead(BaseModel):
     id: int
     source_dir: str
