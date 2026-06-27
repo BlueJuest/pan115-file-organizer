@@ -82,6 +82,11 @@ async function executeRollback() {
         </div>
       </header>
 
+      <div class="risk-panel">
+        <strong>回滚边界</strong>
+        <p>只回滚本工具记录过的可逆操作。真实删除不会进入回滚计划。</p>
+      </div>
+
       <form class="toolbar" @submit.prevent="buildPlan">
         <label class="form-row">
           <span>执行 ID</span>

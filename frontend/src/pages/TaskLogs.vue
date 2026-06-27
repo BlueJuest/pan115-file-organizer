@@ -47,6 +47,7 @@ async function loadLogs() {
           <p class="eyebrow">Task Logs</p>
           <h2>任务日志</h2>
           <p class="hint">输入执行 ID，查看本次整理的操作日志。</p>
+          <p class="hint">这里是执行审计台。失败、删除和不可回滚操作需要重点检查。</p>
         </div>
       </header>
 

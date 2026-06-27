@@ -26,5 +26,7 @@ describe('Preview', () => {
 
     expect(wrapper.text()).toContain('预览确认')
     expect(wrapper.text()).toContain('执行勾选项')
+    expect(wrapper.text()).toContain('真实 115 操作')
+    expect(wrapper.text()).toContain('删除操作不可回滚')
   })
 })

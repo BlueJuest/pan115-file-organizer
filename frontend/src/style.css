@@ -1,7 +1,19 @@
+:root {
+  --bg: #08111f;
+  --panel: #101b2d;
+  --panel-strong: #13233a;
+  --text: #e6edf7;
+  --muted: #8ea4c2;
+  --line: #24344d;
+  --blue: #38bdf8;
+  --green: #22c55e;
+  --red: #ef4444;
+}
+
 body {
   margin: 0;
-  background: #f5f7fb;
-  color: #162033;
+  background: #08111f;
+  color: var(--text);
   font-family: Inter, "Microsoft YaHei", system-ui, sans-serif;
 }
 
@@ -44,11 +56,58 @@ textarea {
 }
 
 .card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
   padding: 18px;
-  box-shadow: 0 6px 20px rgb(15 23 42 / 6%);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 20%);
+}
+
+.top-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.risk-panel {
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(127, 29, 29, 0.28);
+}
+
+.risk-panel strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.risk-panel p {
+  margin: 0;
+  color: #fecaca;
+}
+
+.action-delete {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--red);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .form-grid {
@@ -65,9 +124,11 @@ textarea {
 input,
 select,
 textarea {
-  border: 1px solid #cbd5e1;
+  border: 1px solid #334155;
   border-radius: 8px;
   padding: 9px 11px;
+  background: #0f172a;
+  color: var(--text);
 }
 
 button {
@@ -90,12 +151,12 @@ button.danger {
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--panel);
 }
 
 th,
 td {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--line);
   padding: 10px;
   text-align: left;
 }

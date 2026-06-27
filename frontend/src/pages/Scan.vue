@@ -40,6 +40,7 @@ async function startScan() {
         <p class="eyebrow">Scan</p>
         <h2>目录扫描</h2>
         <p class="hint">选择源目录和目标目录，生成可确认的整理预览。</p>
+        <p class="hint">扫描阶段只读取真实 115 目录，不会改名、移动或删除。</p>
       </div>
     </header>
 
@@ -71,7 +72,7 @@ async function startScan() {
       </div>
 
       <div class="actions">
-        <button type="submit" :disabled="scanning">{{ scanning ? '扫描中...' : '开始扫描并生成预览' }}</button>
+        <button type="submit" :disabled="scanning">{{ scanning ? '扫描中...' : '读取真实 115 目录并生成预览' }}</button>
       </div>
       <p v-if="message" class="message">{{ message }}</p>
     </form>

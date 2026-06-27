@@ -31,5 +31,6 @@ describe('Settings', () => {
 
     expect(wrapper.text()).toContain('115 Cookie')
     expect(wrapper.text()).toContain('TMDB API Key')
+    expect(wrapper.text()).toContain('真实操作模式')
   })
 })

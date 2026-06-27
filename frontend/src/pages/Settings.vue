@@ -97,6 +97,11 @@ onMounted(loadSettings)
       <button class="secondary" type="button" :disabled="loading" @click="loadSettings">重新加载</button>
     </header>
 
+    <div class="risk-panel">
+      <strong>真实操作模式</strong>
+      <p>保存 115 Cookie 后，扫描、改名、移动和删除会作用于真实 115 网盘。请确认 Cookie 来源可信。</p>
+    </div>
+
     <form class="form-grid" @submit.prevent="saveSettings">
       <label class="form-row">
         <span>115 Cookie</span>

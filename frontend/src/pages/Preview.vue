@@ -54,7 +54,7 @@ async function executeSelected() {
     return
   }
 
-  if (!confirm(`确认执行 ${selected.value.size} 项真实 115 操作？`)) return
+  if (!confirm(`确认执行 ${selected.value.size} 项真实 115 操作？删除操作不可回滚。`)) return
 
   executing.value = true
   message.value = ''
@@ -94,6 +94,10 @@ onMounted(loadItems)
       </header>
 
       <p v-if="message" class="message">{{ message }}</p>
+      <div class="risk-panel">
+        <strong>真实 115 操作</strong>
+        <p>本页执行会真实改名、移动或删除 115 文件。删除操作不可回滚，失败项会写入日志并继续执行其他项。</p>
+      </div>
       <p v-if="!loading && items.length === 0" class="empty">暂无预览项。</p>
       <table v-else>
         <thead>
@@ -116,7 +120,7 @@ onMounted(loadItems)
             <td>{{ item.new_path }}</td>
             <td>{{ item.media_type }}</td>
             <td>{{ item.conflict_status }}</td>
-            <td>{{ item.final_action }}</td>
+            <td><span :class="{ 'action-delete': item.final_action === 'delete_old' }">{{ item.final_action }}</span></td>
             <td>{{ item.status }}</td>
           </tr>
         </tbody>

@@ -12,6 +12,11 @@
       <RouterLink to="/rollback">回滚记录</RouterLink>
     </aside>
     <main class="content">
+      <header class="top-status">
+        <span class="status-pill">真实扫描</span>
+        <span class="status-pill">真实执行</span>
+        <span class="status-pill">删除需审计</span>
+      </header>
       <RouterView />
     </main>
   </div>
