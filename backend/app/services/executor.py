@@ -40,6 +40,13 @@ class Executor:
                     item.status = "executed"
                     batch.success_count += 1
                 else:
+                    if self._is_missing_remote_file(result.message):
+                        log.status = "skipped"
+                        log.error_message = result.message
+                        item.status = "skipped"
+                        item.error_message = result.message
+                        batch.skipped_count += 1
+                        continue
                     log.status = "failed"
                     log.error_message = result.message
                     item.status = "failed"
@@ -63,12 +70,22 @@ class Executor:
         db.refresh(batch)
         return batch
 
+    def _is_missing_remote_file(self, message: str) -> bool:
+        return "文件不存在" in message
+
     def _execute_item(self, item: PreviewItem):
         new_path = PurePosixPath(item.new_path)
-        if item.final_action in {"rename", "rename_move"}:
+        if item.final_action == "rename":
             return self.pan_client.rename(item.file_id, new_path.name)
-        if item.final_action == "move":
-            return self.pan_client.move(item.file_id, new_path.parent.as_posix())
+        if item.final_action == "rename_move":
+            target_dir_id = self.pan_client.ensure_dir_path(new_path.parent.as_posix(), root_id="0")
+            rename_result = self.pan_client.rename(item.file_id, new_path.name)
+            if not rename_result.ok:
+                return rename_result
+            return self.pan_client.move(item.file_id, target_dir_id)
+        if item.final_action in {"move", "move_to_recycle"}:
+            target_dir_id = self.pan_client.ensure_dir_path(new_path.parent.as_posix(), root_id="0")
+            return self.pan_client.move(item.file_id, target_dir_id)
         if item.final_action == "delete_old":
             return self.pan_client.delete(item.file_id)
         raise ValueError(f"unsupported action: {item.final_action}")

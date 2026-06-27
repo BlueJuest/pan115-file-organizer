@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+import app.api.execute as execute_api
 import app.api.scan as scan_api
 import app.models  # noqa: F401
 from app.clients.protocols import RemoteFile, TmdbCandidate
@@ -76,6 +77,7 @@ def client(monkeypatch):
 
     app.dependency_overrides[get_db] = override_get_db
     monkeypatch.setattr(scan_api, "CLIENT_FACTORY_CLASS", FakeFactory)
+    monkeypatch.setattr(execute_api, "CLIENT_FACTORY_CLASS", FakeFactory)
     test_client = TestClient(app)
     try:
         yield test_client

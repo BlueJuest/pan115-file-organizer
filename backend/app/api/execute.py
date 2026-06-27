@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.clients.mock_pan115 import MockPan115Client
 from app.core.database import get_db
 from app.models import ExecutionBatch, OperationLog
 from app.schemas.operations import ExecutionCreate, ExecutionRead, OperationLogRead
+from app.services.client_factory import ClientConfigError, ClientFactory
 from app.services.executor import Executor
 
 router = APIRouter(prefix="/api/executions", tags=["executions"])
+CLIENT_FACTORY_CLASS = ClientFactory
 
 
 def execution_to_read(batch: ExecutionBatch) -> ExecutionRead:
@@ -44,7 +45,11 @@ def operation_log_to_read(log: OperationLog) -> OperationLogRead:
 
 @router.post("", response_model=ExecutionRead)
 def create_execution(payload: ExecutionCreate, db: Session = Depends(get_db)) -> ExecutionRead:
-    batch = Executor(MockPan115Client()).execute(db, payload.preview_item_ids, payload.fail_fast)
+    try:
+        pan_client = CLIENT_FACTORY_CLASS(db).pan115()
+    except ClientConfigError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    batch = Executor(pan_client).execute(db, payload.preview_item_ids, payload.fail_fast)
     return execution_to_read(batch)
 
 
