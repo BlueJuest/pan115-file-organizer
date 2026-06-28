@@ -377,6 +377,47 @@ def test_caption_shows_unrated_douban_link_when_url_has_no_rating():
     assert '豆瓣：<a href="https://movie.douban.com/subject/36666710/">暂无评分</a>' in caption
 
 
+def test_caption_keeps_channel_prefix_icons():
+    media = submissions_api.SubmissionMediaDetails(
+        tmdb_id=12345,
+        media_type="movie",
+        title="Example Movie",
+        year=2024,
+        overview="Short overview.",
+        vote_average=7.8,
+        genres=["Drama"],
+    )
+    payload = submissions_api.SubmissionPreviewRequest(
+        share_url="https://115.com/s/example",
+        quality="1080p",
+        video_source="WEB-DL",
+        subtitles="简中",
+        custom_content="Custom note",
+    )
+
+    caption = submissions_api._caption(
+        media,
+        payload,
+        "1GB",
+        "8.1/10",
+        "https://movie.douban.com/subject/12345/",
+        "MeiOvO",
+    )
+
+    assert "📽️ <b>Example Movie (2024)</b>" in caption
+    assert "🎬 类型：电影" in caption
+    assert "⭐️ TMDB评分：" in caption
+    assert "🍿 豆瓣评分：" in caption
+    assert "📺 画质：1080p" in caption
+    assert "📼 视频：WEB-DL" in caption
+    assert "💬 字幕：简中" in caption
+    assert "💾 大小：1GB" in caption
+    assert "👤 分享：" in caption
+    assert "🔗 链接：" in caption
+    assert "📖 简介：" in caption
+    assert "🏷 标签：" in caption
+
+
 def test_publish_submission_sends_tmdb_image_url_to_telegram(client: TestClient, monkeypatch: pytest.MonkeyPatch):
     sent: dict[str, object] = {}
 

@@ -250,41 +250,41 @@ def _caption(
     media_label = "电影" if media.media_type == "movie" else "剧集"
     tmdb_url = f"https://www.themoviedb.org/{media.media_type}/{media.tmdb_id}"
     lines = [
-        f"<b>{escape(media.title)}{year}</b>",
+        f"📽️ <b>{escape(media.title)}{year}</b>",
         "",
-        f"类型：{media_label}",
+        f"🎬 类型：{media_label}",
     ]
     if media.vote_average is not None:
-        lines.append(f'TMDB 评分：<a href="{tmdb_url}">{media.vote_average:.1f}/10</a>')
+        lines.append(f'⭐️ TMDB评分：<a href="{tmdb_url}">{media.vote_average:.1f}/10</a>')
     else:
-        lines.append(f'TMDB：<a href="{tmdb_url}">{media.tmdb_id}</a>')
+        lines.append(f'⭐️ TMDB：<a href="{tmdb_url}">{media.tmdb_id}</a>')
     if douban_rating or douban_url:
         rating = escape(douban_rating or "暂无评分")
         url = escape(douban_url, quote=True)
         if douban_url and douban_rating:
-            lines.append(f'豆瓣评分：<a href="{url}">{rating}</a>')
+            lines.append(f'🍿 豆瓣评分：<a href="{url}">{rating}</a>')
         elif douban_url:
-            lines.append(f'豆瓣：<a href="{url}">{rating}</a>')
+            lines.append(f'🍿 豆瓣：<a href="{url}">{rating}</a>')
         else:
-            lines.append(f"豆瓣评分：{rating}")
+            lines.append(f"🍿 豆瓣评分：{rating}")
     if payload.quality:
-        lines.append(f"画质：{escape(payload.quality)}")
+        lines.append(f"📺 画质：{escape(payload.quality)}")
     if payload.video_source:
-        lines.append(f"视频：{escape(payload.video_source)}")
+        lines.append(f"📼 视频：{escape(payload.video_source)}")
     if payload.subtitles:
-        lines.append(f"字幕：{escape(payload.subtitles)}")
+        lines.append(f"💬 字幕：{escape(payload.subtitles)}")
     if size_text:
-        lines.append(f"大小：{escape(size_text)}")
-    lines.append(f'分享：<a href="{FIXED_SHARE_USER_URL}">{escape(share_user)}</a>')
+        lines.append(f"💾 大小：{escape(size_text)}")
+    lines.append(f'👤 分享：<a href="{FIXED_SHARE_USER_URL}">{escape(share_user)}</a>')
     if payload.custom_content:
         lines.extend([f"<blockquote><b>{escape(payload.custom_content)}</b></blockquote>", ""])
     else:
         lines.append("")
-    lines.append(f'链接：<a href="{escape(payload.share_url, quote=True)}">115网盘</a>')
+    lines.append(f'🔗 链接：<a href="{escape(payload.share_url, quote=True)}">115网盘</a>')
     if media.overview:
-        lines.extend(["", "简介：", f"<blockquote>{escape(media.overview)}</blockquote>"])
+        lines.extend(["", "📖 简介：", f"<blockquote>{escape(media.overview)}</blockquote>"])
     tags = [media.title, *media.genres]
     if tags:
         tag_text = " ".join(f"#{tag.replace(' ', '')}" for tag in tags if tag)
-        lines.extend(["", f"标签：{escape(tag_text)}"])
+        lines.extend(["", f"🏷 标签：{escape(tag_text)}"])
     return "\n".join(lines)
