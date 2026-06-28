@@ -211,12 +211,12 @@ async function publish() {
 }
 
 .submission-form-card,
-.preview-card {
+.preview-card,
+.preview-content {
   display: grid;
   gap: 18px;
 }
 
-.page-header,
 .preview-header {
   display: flex;
   align-items: flex-start;
@@ -224,20 +224,12 @@ async function publish() {
   gap: 16px;
 }
 
-.page-header h2,
 .preview-header h2 {
   margin: 0;
 }
 
-.eyebrow {
-  margin: 0 0 4px;
-  color: var(--blue);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.hint,
 .empty-preview {
+  margin: 0;
   color: var(--muted);
 }
 
@@ -249,40 +241,26 @@ async function publish() {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
+  background: var(--panel-strong);
 }
 
 .option-group legend {
   padding: 0 6px;
   color: var(--muted);
   font-size: 13px;
+  font-weight: 750;
 }
 
 .choice {
-  border: 1px solid #334155;
-  background: #0f172a;
+  border: 1px solid var(--line-strong);
+  background: #fff;
   color: var(--text);
 }
 
 .choice.active {
-  border-color: #38bdf8;
-  background: #2563eb;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.message {
-  margin: 0;
-  color: var(--green);
-  font-weight: 600;
-}
-
-.preview-content {
-  display: grid;
-  gap: 16px;
+  border-color: #9fc0ff;
+  background: var(--blue-soft);
+  color: var(--blue);
 }
 
 .submission-image {
@@ -291,17 +269,19 @@ async function publish() {
   object-fit: contain;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: #0f172a;
+  background: var(--panel-strong);
 }
 
 .caption-preview {
   min-height: 280px;
   resize: vertical;
   white-space: pre-wrap;
+  background: #fbfdff;
 }
 
 .meta-list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 0;
 }
@@ -309,19 +289,33 @@ async function publish() {
 .meta-list div {
   display: grid;
   gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--panel-strong);
 }
 
 .meta-list dt {
   color: var(--muted);
   font-size: 12px;
+  font-weight: 800;
 }
 
 .meta-list dd {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 1100px) {
   .submission-page {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .preview-header,
+  .meta-list {
+    display: grid;
     grid-template-columns: 1fr;
   }
 }

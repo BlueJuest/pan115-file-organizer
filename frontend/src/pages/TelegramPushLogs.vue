@@ -283,23 +283,23 @@ onMounted(loadLogs)
 }
 
 .status-badge.success {
-  background: rgba(34, 197, 94, 0.16);
+  background: var(--green-soft);
   color: var(--green);
 }
 
 .status-badge.failed {
-  background: rgba(239, 68, 68, 0.16);
-  color: #fca5a5;
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .status-badge.pending {
-  background: rgba(56, 189, 248, 0.16);
+  background: var(--blue-soft);
   color: var(--blue);
 }
 
 .error-cell {
   max-width: 260px;
-  color: #fca5a5;
+  color: var(--red);
 }
 
 .modal-backdrop {
@@ -308,7 +308,7 @@ onMounted(loadLogs)
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgb(0 0 0 / 58%);
+  background: rgb(15 23 42 / 50%);
   z-index: 20;
 }
 
@@ -354,3 +354,4 @@ onMounted(loadLogs)
   }
 }
 </style>
+

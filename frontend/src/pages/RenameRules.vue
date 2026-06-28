@@ -229,16 +229,15 @@ onMounted(loadRules)
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #2563eb;
+  color: var(--blue);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .hint,
 .empty {
-  color: #64748b;
+  color: var(--muted);
 }
 
 .two-columns {
@@ -264,14 +263,14 @@ onMounted(loadRules)
 }
 
 .selected {
-  background: #eff6ff;
+  background: var(--blue-soft);
 }
 
 .test-result {
-  border: 1px solid #bfdbfe;
-  border-radius: 10px;
+  border: 1px solid #b8d0ff;
+  border-radius: 8px;
   padding: 12px;
-  background: #eff6ff;
+  background: var(--blue-soft);
 }
 
 .test-result pre {
@@ -281,7 +280,7 @@ onMounted(loadRules)
 
 .message {
   margin: 0;
-  color: #0f766e;
+  color: var(--green);
   font-weight: 600;
 }
 
@@ -291,3 +290,4 @@ onMounted(loadRules)
   }
 }
 </style>
+

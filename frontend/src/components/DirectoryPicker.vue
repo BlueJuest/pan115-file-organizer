@@ -28,7 +28,7 @@ const error = ref('')
 const currentId = ref('0')
 const currentPath = ref('/')
 const items = ref<DirectoryItem[]>([])
-const trail = ref<Array<{ id: string; path: string; name: string }>>([{ id: '0', path: '/', name: 'Root' }])
+const trail = ref<Array<{ id: string; path: string; name: string }>>([{ id: '0', path: '/', name: '根目录' }])
 
 async function loadDirectory(id = '0', path = '/') {
   loading.value = true
@@ -80,7 +80,7 @@ onMounted(() => loadDirectory())
       <span>{{ label }}</span>
       <div class="picker-input">
         <input :value="modelValue" :placeholder="placeholder || '0'" @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)" />
-        <button class="secondary" type="button" @click="open = !open">Browse</button>
+        <button class="secondary" type="button" @click="open = !open">浏览</button>
       </div>
     </label>
 
@@ -93,16 +93,16 @@ onMounted(() => loadDirectory())
 
       <div class="panel-actions">
         <span class="current-path">{{ currentPath }}</span>
-        <button type="button" @click="chooseCurrent">Select</button>
+        <button type="button" @click="chooseCurrent">选择当前目录</button>
       </div>
 
-      <p v-if="loading" class="picker-status">Loading...</p>
+      <p v-if="loading" class="picker-status">目录加载中...</p>
       <p v-else-if="error" class="picker-error">{{ error }}</p>
-      <p v-else-if="items.length === 0" class="picker-status">No subdirectories</p>
+      <p v-else-if="items.length === 0" class="picker-status">没有子目录</p>
       <div v-else class="directory-list">
         <div v-for="item in items" :key="item.id" class="directory-row">
           <button type="button" class="directory-name" @click="enterDirectory(item)">{{ item.name }}</button>
-          <button class="secondary" type="button" @click="chooseItem(item)">Use</button>
+          <button class="secondary" type="button" @click="chooseItem(item)">使用</button>
         </div>
       </div>
     </div>
@@ -127,10 +127,10 @@ onMounted(() => loadDirectory())
 .picker-panel {
   display: grid;
   gap: 10px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--line-strong);
   border-radius: 8px;
   padding: 12px;
-  background: #f8fafc;
+  background: var(--panel-strong);
 }
 
 .crumbs,
@@ -148,7 +148,7 @@ onMounted(() => loadDirectory())
 .current-path {
   flex: 1;
   min-width: 160px;
-  color: #475569;
+  color: var(--muted);
   overflow-wrap: anywhere;
 }
 
@@ -164,7 +164,7 @@ onMounted(() => loadDirectory())
   gap: 10px;
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line);
   background: #ffffff;
 }
 
@@ -173,18 +173,18 @@ onMounted(() => loadDirectory())
   padding: 0;
   border: 0;
   background: transparent;
-  color: #0f172a;
+  color: var(--text);
   text-align: left;
 }
 
 .picker-status {
   margin: 0;
-  color: #64748b;
+  color: var(--muted);
 }
 
 .picker-error {
   margin: 0;
-  color: #b91c1c;
+  color: var(--red);
 }
 
 @media (max-width: 700px) {
@@ -193,3 +193,4 @@ onMounted(() => loadDirectory())
   }
 }
 </style>
+

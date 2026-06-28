@@ -134,16 +134,15 @@ async function executeRollback() {
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #2563eb;
+  color: var(--blue);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .hint,
 .empty {
-  color: #64748b;
+  color: var(--muted);
 }
 
 .toolbar {
@@ -159,7 +158,7 @@ async function executeRollback() {
 
 .message {
   margin: 12px 0;
-  color: #0f766e;
+  color: var(--green);
   font-weight: 600;
 }
 
@@ -169,3 +168,4 @@ async function executeRollback() {
   }
 }
 </style>
+

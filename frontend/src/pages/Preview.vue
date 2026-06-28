@@ -13,7 +13,6 @@ const loading = ref(false)
 const executing = ref(false)
 const message = ref('')
 
-
 function isSelected(id: number) {
   return selected.value.has(id)
 }
@@ -80,12 +79,12 @@ onMounted(loadItems)
       <header class="page-header">
         <div>
           <p class="eyebrow">预览确认</p>
-          <h2>预览确认</h2>
-          <p class="hint">扫描批次 ID：{{ scanId || '未指定' }}</p>
+          <h2>整理清单</h2>
+          <p class="hint">扫描批次 ID：{{ scanId || '未指定' }}，当前已勾选 {{ selected.size }} / {{ items.length }} 项。</p>
         </div>
         <div class="actions">
           <button class="secondary" type="button" :disabled="loading" @click="loadItems">
-            {{ loading ? '加载中...' : '加载预览' }}
+            {{ loading ? '加载中...' : '重新加载' }}
           </button>
           <button type="button" :disabled="executing" @click="executeSelected">
             {{ executing ? '执行中...' : '执行勾选项' }}
@@ -93,92 +92,58 @@ onMounted(loadItems)
         </div>
       </header>
 
-      <p v-if="message" class="message">{{ message }}</p>
       <div class="risk-panel">
         <strong>真实 115 操作</strong>
-        <p>本页执行会真实改名、移动或删除 115 文件。删除操作不可回滚，失败项会写入日志并继续执行其他项。</p>
+        <p>执行会真实改名、移动或删除 115 文件。删除操作不可回滚，失败项会写入日志并继续执行其他项。</p>
       </div>
+
+      <p v-if="message" class="message">{{ message }}</p>
       <p v-if="!loading && items.length === 0" class="empty">暂无预览项。</p>
-      <table v-else>
-        <thead>
-          <tr>
-            <th>选择</th>
-            <th>原路径</th>
-            <th>新路径</th>
-            <th>媒体类型</th>
-            <th>冲突</th>
-            <th>动作</th>
-            <th>状态</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in items" :key="item.id">
-            <td>
-              <input type="checkbox" :checked="isSelected(item.id)" @change="toggle(item.id)" />
-            </td>
-            <td>{{ item.original_path }}</td>
-            <td>{{ item.new_path }}</td>
-            <td>{{ item.media_type }}</td>
-            <td>{{ item.conflict_status }}</td>
-            <td><span :class="{ 'action-delete': item.final_action === 'delete_old' }">{{ item.final_action }}</span></td>
-            <td>{{ item.status }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-else class="table-wrap preview-table">
+        <table>
+          <thead>
+            <tr>
+              <th>选择</th>
+              <th>原路径</th>
+              <th>新路径</th>
+              <th>媒体类型</th>
+              <th>冲突</th>
+              <th>动作</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in items" :key="item.id">
+              <td>
+                <input type="checkbox" :checked="isSelected(item.id)" @change="toggle(item.id)" />
+              </td>
+              <td>{{ item.original_path }}</td>
+              <td>{{ item.new_path }}</td>
+              <td><span class="status-pill">{{ item.media_type }}</span></td>
+              <td>{{ item.conflict_status }}</td>
+              <td><span :class="{ 'action-delete': item.final_action === 'delete_old' }">{{ item.final_action }}</span></td>
+              <td>{{ item.status }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.preview-page {
+.preview-page,
+.card {
   display: grid;
-  gap: 18px;
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
   gap: 16px;
 }
 
-.page-header h2 {
-  margin: 0;
-}
-
-.eyebrow {
-  margin: 0 0 4px;
-  color: #2563eb;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.hint,
-.empty {
-  color: #64748b;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.message {
-  margin: 12px 0;
-  color: #0f766e;
-  font-weight: 600;
+.preview-table {
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 td input {
   width: auto;
-}
-
-@media (max-width: 900px) {
-  .page-header {
-    display: grid;
-  }
 }
 </style>
