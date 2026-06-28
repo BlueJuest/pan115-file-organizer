@@ -55,6 +55,31 @@ export interface SubmissionPublishResponse {
   telegram_message_id: string
 }
 
+export interface TelegramPushLogRead {
+  id: number
+  status: string
+  telegram_message_id: string
+  telegram_channel_id: string
+  title: string
+  caption: string
+  image_url: string
+  share_url: string
+  source_url: string
+  media_type: string
+  tmdb_id: number | null
+  douban_url: string
+  error_message: string
+  request_payload: string
+  response_payload: string
+  resent_from_id: number | null
+  created_at: string
+}
+
+export interface TelegramPushLogList {
+  items: TelegramPushLogRead[]
+  total: number
+}
+
 export interface RenameRuleRead {
   id: number
   name: string

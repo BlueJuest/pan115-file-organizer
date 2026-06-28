@@ -22,6 +22,7 @@ def create_db_and_tables() -> None:
     import app.models.rules  # noqa: F401
     import app.models.scan  # noqa: F401
     import app.models.settings  # noqa: F401
+    import app.models.telegram  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     ensure_settings_columns()

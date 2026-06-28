@@ -57,7 +57,7 @@ async function loadSettings() {
     form.allow_delete_old_files = settings.allow_delete_old_files
     form.recursive_scan = settings.recursive_scan
   } catch (error) {
-    message.value = `Failed to load settings: ${(error as Error).message}`
+    message.value = `加载配置失败：${(error as Error).message}`
   } finally {
     loading.value = false
   }
@@ -67,7 +67,7 @@ async function saveSettings() {
   saving.value = true
   message.value = ''
   try {
-    const payload = {
+    const settings = await apiSend<SettingsRead>('/api/settings', 'PUT', {
       pan115_cookie: form.pan115_cookie,
       tmdb_api_key: form.tmdb_api_key,
       tmdb_language: form.tmdb_language,
@@ -79,17 +79,16 @@ async function saveSettings() {
       default_recycle_dir: form.default_recycle_dir,
       allow_delete_old_files: form.allow_delete_old_files,
       recursive_scan: form.recursive_scan,
-    }
-    const settings = await apiSend<SettingsRead>('/api/settings', 'PUT', payload)
+    })
     masked.pan115_cookie = settings.pan115_cookie_masked
     masked.tmdb_api_key = settings.tmdb_api_key_masked
     masked.telegram_bot_token = settings.telegram_bot_token_masked
     form.pan115_cookie = ''
     form.tmdb_api_key = ''
     form.telegram_bot_token = ''
-    message.value = 'Settings saved'
+    message.value = '配置已保存'
   } catch (error) {
-    message.value = `Failed to save settings: ${(error as Error).message}`
+    message.value = `保存配置失败：${(error as Error).message}`
   } finally {
     saving.value = false
   }
@@ -102,7 +101,7 @@ async function testConnection(kind: '115' | 'tmdb') {
     const result = await apiSend<TestResult>(url, 'POST')
     message.value = result.message
   } catch (error) {
-    message.value = `Connection test failed: ${(error as Error).message}`
+    message.value = `连接测试失败：${(error as Error).message}`
   }
 }
 
@@ -113,72 +112,72 @@ onMounted(loadSettings)
   <section class="card settings-page">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Settings</p>
-        <h2>System settings</h2>
-        <p class="hint">Manage 115, TMDB, and default directory values. Empty secret fields keep the current saved value.</p>
+        <p class="eyebrow">系统配置</p>
+        <h2>系统设置</h2>
+        <p class="hint">管理 115、TMDB、Telegram 和默认目录。密钥输入框留空时会保留当前已保存的值。</p>
       </div>
-      <button class="secondary" type="button" :disabled="loading" @click="loadSettings">Reload</button>
+      <button class="secondary" type="button" :disabled="loading" @click="loadSettings">重新加载</button>
     </header>
 
     <div class="risk-panel">
-      <strong>Real operation mode</strong>
-      <p>After saving a 115 Cookie, scans and confirmed operations read from your real 115 drive. Preview remains required before changes run.</p>
+      <strong>真实操作模式</strong>
+      <p>保存 115 Cookie 后，扫描和已确认的操作会读取真实 115 网盘；所有变更仍需先生成预览再确认执行。</p>
     </div>
 
     <form class="form-grid" @submit.prevent="saveSettings">
       <label class="form-row">
         <span>115 Cookie</span>
-        <input v-model="form.pan115_cookie" type="password" placeholder="Enter a new 115 Cookie" autocomplete="off" />
-        <small>Current: {{ masked.pan115_cookie || 'Not configured' }}</small>
+        <input v-model="form.pan115_cookie" type="password" placeholder="输入新的 115 Cookie" autocomplete="off" />
+        <small>当前：{{ masked.pan115_cookie || '未配置' }}</small>
       </label>
 
       <label class="form-row">
         <span>TMDB API Key</span>
-        <input v-model="form.tmdb_api_key" type="password" placeholder="Enter a new TMDB API Key" autocomplete="off" />
-        <small>Current: {{ masked.tmdb_api_key || 'Not configured' }}</small>
+        <input v-model="form.tmdb_api_key" type="password" placeholder="输入新的 TMDB API Key" autocomplete="off" />
+        <small>当前：{{ masked.tmdb_api_key || '未配置' }}</small>
       </label>
 
       <label class="form-row">
-        <span>TMDB language</span>
+        <span>TMDB 语言</span>
         <input v-model="form.tmdb_language" placeholder="zh-CN" />
       </label>
 
       <div class="directory-grid">
         <label class="form-row">
           <span>Telegram bot token</span>
-          <input v-model="form.telegram_bot_token" type="password" placeholder="Enter a new bot token" autocomplete="off" />
-          <small>Current: {{ masked.telegram_bot_token || 'Not configured' }}</small>
+          <input v-model="form.telegram_bot_token" type="password" placeholder="输入新的 bot token" autocomplete="off" />
+          <small>当前：{{ masked.telegram_bot_token || '未配置' }}</small>
         </label>
         <label class="form-row">
-          <span>Telegram channel ID</span>
-          <input v-model="form.telegram_channel_id" placeholder="@channel or -100..." />
+          <span>Telegram 频道 ID</span>
+          <input v-model="form.telegram_channel_id" placeholder="@channel 或 -100..." />
         </label>
         <label class="form-row">
-          <span>Default share user</span>
-          <input v-model="form.default_share_user" placeholder="Uploader name" />
+          <span>默认分享人</span>
+          <input v-model="form.default_share_user" placeholder="发布者名称" />
         </label>
       </div>
 
       <div class="directory-grid">
-        <DirectoryPicker v-model="form.default_source_dir" label="Default source directory" placeholder="0" value-mode="id" />
-        <DirectoryPicker v-model="form.default_target_dir" label="Default target directory" placeholder="0" value-mode="id" />
-        <DirectoryPicker v-model="form.default_recycle_dir" label="Default recycle directory" placeholder="0" value-mode="id" />
+        <DirectoryPicker v-model="form.default_source_dir" label="默认来源目录" placeholder="0" value-mode="id" />
+        <DirectoryPicker v-model="form.default_target_dir" label="默认目标目录" placeholder="0" value-mode="id" />
+        <DirectoryPicker v-model="form.default_recycle_dir" label="默认回收目录" placeholder="0" value-mode="id" />
       </div>
 
       <label class="check-row">
         <input v-model="form.allow_delete_old_files" type="checkbox" />
-        <span>Allow deleting old files</span>
+        <span>允许删除旧文件</span>
       </label>
 
       <label class="check-row">
         <input v-model="form.recursive_scan" type="checkbox" />
-        <span>Scan directories recursively by default</span>
+        <span>默认递归扫描目录</span>
       </label>
 
       <div class="actions">
-        <button type="submit" :disabled="saving">{{ saving ? 'Saving...' : 'Save settings' }}</button>
-        <button class="secondary" type="button" @click="testConnection('115')">Test 115</button>
-        <button class="secondary" type="button" @click="testConnection('tmdb')">Test TMDB</button>
+        <button type="submit" :disabled="saving">{{ saving ? '保存中...' : '保存配置' }}</button>
+        <button class="secondary" type="button" @click="testConnection('115')">测试 115</button>
+        <button class="secondary" type="button" @click="testConnection('tmdb')">测试 TMDB</button>
       </div>
 
       <p v-if="message" class="message">{{ message }}</p>
@@ -205,16 +204,14 @@ onMounted(loadSettings)
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #2563eb;
+  color: var(--blue);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .hint,
 small {
-  color: #64748b;
+  color: var(--muted);
 }
 
 .directory-grid {
@@ -241,7 +238,7 @@ small {
 
 .message {
   margin: 0;
-  color: #0f766e;
+  color: var(--green);
   font-weight: 600;
 }
 

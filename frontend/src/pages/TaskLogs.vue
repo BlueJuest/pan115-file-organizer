@@ -44,10 +44,10 @@ async function loadLogs() {
     <div class="card">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Task Logs</p>
-          <h2>任务日志</h2>
+          <p class="eyebrow">任务日志</p>
+          <h2>操作日志</h2>
           <p class="hint">输入执行 ID，查看本次整理的操作日志。</p>
-          <p class="hint">这里是执行审计台。失败、删除和不可回滚操作需要重点检查。</p>
+          <p class="hint">失败、删除和不可回滚操作需要重点检查。</p>
         </div>
       </header>
 
@@ -66,8 +66,8 @@ async function loadLogs() {
           <tr>
             <th>ID</th>
             <th>操作</th>
-            <th>前</th>
-            <th>后</th>
+            <th>原路径</th>
+            <th>新路径</th>
             <th>状态</th>
             <th>可回滚</th>
           </tr>
@@ -99,16 +99,14 @@ async function loadLogs() {
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #2563eb;
+  color: var(--blue);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .hint,
 .empty {
-  color: #64748b;
+  color: var(--muted);
 }
 
 .toolbar {
@@ -124,7 +122,7 @@ async function loadLogs() {
 
 .message {
   margin: 12px 0;
-  color: #0f766e;
+  color: var(--green);
   font-weight: 600;
 }
 

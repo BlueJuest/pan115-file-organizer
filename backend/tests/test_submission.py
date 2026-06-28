@@ -415,6 +415,17 @@ def test_publish_submission_sends_tmdb_image_url_to_telegram(client: TestClient,
     assert response.json() == {"ok": True, "message": "Telegram 推送成功", "telegram_message_id": "42"}
     assert sent["image"] == "https://image.tmdb.org/t/p/original/backdrop.jpg"
 
+    logs_response = client.get("/api/telegram-push-logs")
+
+    assert logs_response.status_code == 200
+    logs = logs_response.json()["items"]
+    assert len(logs) == 1
+    assert logs[0]["status"] == "success"
+    assert logs[0]["telegram_message_id"] == "42"
+    assert logs[0]["telegram_channel_id"] == "-1001234567890"
+    assert logs[0]["caption"] == "Example"
+    assert logs[0]["image_url"] == "https://image.tmdb.org/t/p/original/backdrop.jpg"
+
 
 def test_publish_submission_uses_environment_telegram_config_when_database_is_empty(
     client: TestClient,
@@ -446,6 +457,105 @@ def test_publish_submission_uses_environment_telegram_config_when_database_is_em
     assert response.json()["telegram_message_id"] == "77"
     assert sent["bot_token"] == "env-token"
     assert sent["channel_id"] == "env-channel"
+
+
+def test_publish_submission_records_failed_telegram_push(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    class FakeTelegramClient:
+        def __init__(self, bot_token: str, channel_id: str) -> None:
+            pass
+
+        def send_photo(self, image: str, caption: str) -> str:
+            raise RuntimeError("Telegram send failed")
+
+    monkeypatch.setattr(submissions_api, "TELEGRAM_CLIENT_CLASS", FakeTelegramClient)
+
+    client.put(
+        "/api/settings",
+        json={
+            "telegram_bot_token": "token-123",
+            "telegram_channel_id": "-1001234567890",
+            "tmdb_language": "zh-CN",
+            "default_source_dir": "0",
+            "default_target_dir": "0",
+            "default_recycle_dir": "0",
+            "allow_delete_old_files": False,
+            "recursive_scan": True,
+        },
+    )
+
+    response = client.post(
+        "/api/submissions/publish",
+        json={"image_url": "https://image.tmdb.org/t/p/original/backdrop.jpg", "caption": "Failed log"},
+    )
+
+    assert response.status_code == 400
+    logs = client.get("/api/telegram-push-logs").json()["items"]
+    assert len(logs) == 1
+    assert logs[0]["status"] == "failed"
+    assert logs[0]["error_message"] == "Telegram send failed"
+    assert logs[0]["caption"] == "Failed log"
+
+
+def test_telegram_push_logs_can_be_filtered_deleted_and_resent(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    sent: list[tuple[str, str, str]] = []
+
+    class FakeTelegramClient:
+        def __init__(self, bot_token: str, channel_id: str) -> None:
+            self.channel_id = channel_id
+
+        def send_photo(self, image: str, caption: str) -> str:
+            sent.append((self.channel_id, image, caption))
+            return str(100 + len(sent))
+
+    monkeypatch.setattr(submissions_api, "TELEGRAM_CLIENT_CLASS", FakeTelegramClient)
+
+    client.put(
+        "/api/settings",
+        json={
+            "telegram_bot_token": "token-123",
+            "telegram_channel_id": "-1001234567890",
+            "tmdb_language": "zh-CN",
+            "default_source_dir": "0",
+            "default_target_dir": "0",
+            "default_recycle_dir": "0",
+            "allow_delete_old_files": False,
+            "recursive_scan": True,
+        },
+    )
+    client.post(
+        "/api/submissions/publish",
+        json={"image_url": "https://image.tmdb.org/t/p/original/a.jpg", "caption": "First Alpha"},
+    )
+    client.post(
+        "/api/submissions/publish",
+        json={"image_url": "https://image.tmdb.org/t/p/original/b.jpg", "caption": "Second Beta"},
+    )
+
+    filtered_response = client.get("/api/telegram-push-logs", params={"keyword": "Alpha", "status": "success"})
+
+    assert filtered_response.status_code == 200
+    filtered = filtered_response.json()
+    assert filtered["total"] == 1
+    source_log = filtered["items"][0]
+    assert source_log["caption"] == "First Alpha"
+
+    resend_response = client.post(f"/api/telegram-push-logs/{source_log['id']}/resend")
+
+    assert resend_response.status_code == 200
+    resent = resend_response.json()
+    assert resent["ok"] is True
+    assert resent["telegram_message_id"] == "103"
+    assert sent[-1] == ("-1001234567890", "https://image.tmdb.org/t/p/original/a.jpg", "First Alpha")
+
+    logs_after_resend = client.get("/api/telegram-push-logs").json()["items"]
+    resend_log = next(item for item in logs_after_resend if item["telegram_message_id"] == "103")
+    assert resend_log["resent_from_id"] == source_log["id"]
+
+    delete_response = client.delete(f"/api/telegram-push-logs/{source_log['id']}")
+
+    assert delete_response.status_code == 200
+    remaining_ids = {item["id"] for item in client.get("/api/telegram-push-logs").json()["items"]}
+    assert source_log["id"] not in remaining_ids
 
 
 def test_telegram_client_sends_photo_url_as_html(monkeypatch: pytest.MonkeyPatch):

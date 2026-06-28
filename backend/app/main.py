@@ -8,6 +8,7 @@ from app.api.rules import router as rules_router
 from app.api.scan import router as scan_router
 from app.api.settings import router as settings_router
 from app.api.submissions import router as submissions_router
+from app.api.telegram_push_logs import router as telegram_push_logs_router
 from app.core.config import get_settings
 from app.core.database import create_db_and_tables
 
@@ -29,6 +30,7 @@ app.include_router(scan_router)
 app.include_router(execute_router)
 app.include_router(rollback_router)
 app.include_router(submissions_router)
+app.include_router(telegram_push_logs_router)
 
 
 @app.on_event("startup")

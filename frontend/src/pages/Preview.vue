@@ -79,7 +79,7 @@ onMounted(loadItems)
     <div class="card">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Preview</p>
+          <p class="eyebrow">预览确认</p>
           <h2>预览确认</h2>
           <p class="hint">扫描批次 ID：{{ scanId || '未指定' }}</p>
         </div>

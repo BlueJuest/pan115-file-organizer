@@ -9,6 +9,7 @@ import Scan from '../pages/Scan.vue'
 import Settings from '../pages/Settings.vue'
 import Submission from '../pages/Submission.vue'
 import TaskLogs from '../pages/TaskLogs.vue'
+import TelegramPushLogs from '../pages/TelegramPushLogs.vue'
 
 export default createRouter({
   history: createWebHistory(),
@@ -20,6 +21,7 @@ export default createRouter({
     { path: '/scan', component: Scan },
     { path: '/preview/:scanId?', component: Preview },
     { path: '/submission', component: Submission },
+    { path: '/telegram-push-logs', component: TelegramPushLogs },
     { path: '/logs', component: TaskLogs },
     { path: '/rollback', component: Rollback },
   ],

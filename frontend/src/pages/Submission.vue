@@ -6,7 +6,7 @@ import type { SubmissionPreviewResponse, SubmissionPublishResponse } from '../ap
 
 const QUALITY_OPTIONS = ['2160p', '1080p', '720p', '480p']
 const SOURCE_OPTIONS = ['WEB-DL/WEBRip', 'ISO', 'REMUX', 'DVD', 'DVDRip', 'BDRip/BluRayEncode']
-const SUBTITLE_OPTIONS = ['简中', '繁中', '简日双语', '繁体双语', '简英双语', '繁英双语']
+const SUBTITLE_OPTIONS = ['简中', '繁中', '简日双语', '繁日双语', '简英双语', '繁英双语']
 const MEDIA_TYPE_OPTIONS = [
   { label: '自动', value: 'auto' },
   { label: '电影', value: 'movie' },
@@ -51,7 +51,7 @@ async function generatePreview() {
   preview.value = null
   try {
     preview.value = await apiSend<SubmissionPreviewResponse>('/api/submissions/preview', 'POST', payload.value)
-    message.value = '预览已生成，请确认原图和频道文本后推送。'
+    message.value = '预览已生成，请确认图片和频道文案后推送。'
   } catch (error) {
     message.value = `生成失败：${(error as Error).message}`
   } finally {
@@ -69,10 +69,10 @@ async function publish() {
       caption: preview.value.caption,
     })
     message.value = result.telegram_message_id
-      ? `${result.message}，消息 ID：${result.telegram_message_id}`
+      ? `${result.message}，消息 ID：${result.telegram_message_id}。可在 TG 推送记录中查看详情。`
       : result.message
   } catch (error) {
-    message.value = `推送失败：${(error as Error).message}`
+    message.value = `推送失败：${(error as Error).message}。失败记录已保存，可到 TG 推送记录查看。`
   } finally {
     publishing.value = false
   }
@@ -84,9 +84,9 @@ async function publish() {
     <div class="card submission-form-card">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Submission</p>
-          <h2>投稿生成</h2>
-          <p class="hint">输入 115 分享链接，自动识别媒体信息并生成 Telegram 频道文本。</p>
+          <p class="eyebrow">投稿生成</p>
+          <h2>Telegram 投稿</h2>
+          <p class="hint">输入 115 分享链接，自动识别媒体信息并生成频道文案。</p>
         </div>
       </header>
 
@@ -97,7 +97,7 @@ async function publish() {
         </label>
 
         <fieldset class="option-group">
-          <legend>类型</legend>
+          <legend>媒体类型</legend>
           <button
             v-for="option in MEDIA_TYPE_OPTIONS"
             :key="option.value"
@@ -123,7 +123,7 @@ async function publish() {
         </fieldset>
 
         <fieldset class="option-group">
-          <legend>视频源</legend>
+          <legend>视频来源</legend>
           <button
             v-for="option in SOURCE_OPTIONS"
             :key="option"
@@ -167,14 +167,14 @@ async function publish() {
     <div class="card preview-card">
       <header class="preview-header">
         <div>
-          <p class="eyebrow">Preview</p>
-          <h2>预览确认</h2>
+          <p class="eyebrow">预览确认</p>
+          <h2>频道内容</h2>
         </div>
         <span v-if="preview" class="status-pill">{{ preview.media.media_type === 'movie' ? '电影' : '剧集' }}</span>
       </header>
 
       <div v-if="preview" class="preview-content">
-        <img v-if="preview.image_url" class="submission-image" :src="preview.image_url" alt="频道推送原图预览" />
+        <img v-if="preview.image_url" class="submission-image" :src="preview.image_url" alt="频道推送图片预览" />
         <p v-else class="empty-preview">TMDB 没有可用剧照或海报。</p>
         <textarea class="caption-preview" readonly rows="14" :value="preview.caption" />
         <dl class="meta-list">
@@ -197,7 +197,7 @@ async function publish() {
         </dl>
       </div>
 
-      <p v-else class="empty-preview">生成后会在这里显示频道推送原图和 Telegram 文本。</p>
+      <p v-else class="empty-preview">生成后会在这里显示频道推送图片和 Telegram 文案。</p>
     </div>
   </section>
 </template>
@@ -234,8 +234,6 @@ async function publish() {
   color: var(--blue);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .hint,
