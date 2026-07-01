@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.auth import router as auth_router
 from app.api.execute import router as execute_router
 from app.api.quality_profiles import router as quality_profiles_router
 from app.api.rollback import router as rollback_router
@@ -24,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(settings_router)
+app.include_router(auth_router)
 app.include_router(rules_router)
 app.include_router(quality_profiles_router)
 app.include_router(scan_router)

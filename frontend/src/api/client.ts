@@ -1,5 +1,5 @@
 export async function apiGet<T>(url: string): Promise<T> {
-  const response = await fetch(url)
+  const response = await fetch(url, { credentials: 'include' })
   if (!response.ok) throw new Error(await readErrorMessage(response))
   return response.json() as Promise<T>
 }
@@ -7,6 +7,7 @@ export async function apiGet<T>(url: string): Promise<T> {
 export async function apiSend<T>(url: string, method: 'POST' | 'PUT' | 'DELETE', body?: unknown): Promise<T> {
   const response = await fetch(url, {
     method,
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   })

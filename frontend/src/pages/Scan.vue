@@ -35,8 +35,8 @@ async function startScan() {
 </script>
 
 <template>
-  <section class="card scan-page">
-    <header class="page-header">
+  <section class="scan-page">
+    <header class="page-title">
       <div>
         <p class="eyebrow">目录扫描</p>
         <h2>读取 115 目录</h2>
@@ -44,39 +44,46 @@ async function startScan() {
       </div>
     </header>
 
-    <form class="form-grid" @submit.prevent="startScan">
-      <div class="two-columns">
-        <DirectoryPicker v-model="form.source_dir" label="来源目录" placeholder="0" value-mode="id" />
-        <DirectoryPicker v-model="form.target_dir" label="目标目录" placeholder="/Movies" value-mode="path" />
-      </div>
+    <div class="config-grid">
+      <form class="section-card form-grid" @submit.prevent="startScan">
+        <div class="two-columns">
+          <DirectoryPicker v-model="form.source_dir" label="来源目录" placeholder="0" value-mode="id" />
+          <DirectoryPicker v-model="form.target_dir" label="目标目录" placeholder="/Movies" value-mode="path" />
+        </div>
 
-      <div class="two-columns">
-        <label class="form-row">
-          <span>媒体类型</span>
-          <select v-model="form.media_type">
-            <option value="movie">电影</option>
-            <option value="tv">剧集</option>
-            <option value="anime">动漫</option>
-          </select>
-        </label>
-        <label class="check-row">
-          <input v-model="form.recursive" type="checkbox" />
-          <span>递归扫描子目录</span>
-        </label>
-      </div>
+        <div class="two-columns">
+          <label class="form-row">
+            <span>媒体类型</span>
+            <select v-model="form.media_type">
+              <option value="movie">电影</option>
+              <option value="tv">剧集</option>
+              <option value="anime">动漫</option>
+            </select>
+          </label>
+          <label class="check-row">
+            <input v-model="form.recursive" type="checkbox" />
+            <span>递归扫描子目录</span>
+          </label>
+        </div>
 
-      <div class="actions">
-        <button type="submit" :disabled="scanning">{{ scanning ? '扫描中...' : '读取目录并生成预览' }}</button>
-      </div>
-      <p v-if="message" class="message">{{ message }}</p>
-    </form>
+        <div class="actions">
+          <button type="submit" :disabled="scanning">{{ scanning ? '扫描中...' : '读取目录并生成预览' }}</button>
+        </div>
+        <p v-if="message" class="message">{{ message }}</p>
+      </form>
+
+      <aside class="section-card notice-panel">
+        <strong>扫描说明</strong>
+        <p>扫描只生成预览，不会直接执行真实文件变更。确认后再进入预览页操作。</p>
+      </aside>
+    </div>
   </section>
 </template>
 
 <style scoped>
 .scan-page {
   display: grid;
-  gap: 20px;
+  gap: 18px;
 }
 
 .check-row {

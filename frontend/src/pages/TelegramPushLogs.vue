@@ -103,16 +103,16 @@ onMounted(loadLogs)
 
 <template>
   <section class="telegram-log-page">
-    <div class="card">
-      <header class="page-header">
-        <div>
-          <p class="eyebrow">Telegram 推送</p>
-          <h2>推送记录</h2>
-          <p class="hint">查看每次 Telegram 推送的内容、状态和失败原因，并可按历史内容重新推送。</p>
-        </div>
-        <button type="button" :disabled="loading" @click="loadLogs">刷新</button>
-      </header>
+    <header class="page-title">
+      <div>
+        <p class="eyebrow">Telegram 推送</p>
+        <h2>推送记录</h2>
+        <p class="hint">查看每次 Telegram 推送的内容、状态和失败原因，并可按历史内容重新推送。</p>
+      </div>
+      <button type="button" :disabled="loading" @click="loadLogs">刷新</button>
+    </header>
 
+    <div class="section-card">
       <form class="filters" @submit.prevent="loadLogs">
         <label class="form-row">
           <span>状态</span>
@@ -148,7 +148,7 @@ onMounted(loadLogs)
       <p v-if="message" class="message">{{ message }}</p>
       <p class="summary">共 {{ total }} 条记录</p>
 
-      <div class="table-wrap">
+      <div class="table-shell">
         <table>
           <thead>
             <tr>

@@ -1,58 +1,79 @@
 <template>
   <section class="dashboard-page">
-    <div class="hero-panel card">
+    <header class="page-title console-title">
       <div>
-        <p class="eyebrow">工作台</p>
-        <h2>文件整理中枢</h2>
-        <p class="hint">从 115 目录扫描开始，先预览确认，再执行真实整理；投稿模块用于生成 Telegram 频道内容。</p>
+        <p class="eyebrow">控制台</p>
+        <h2>控制台</h2>
+        <p class="hint">目录扫描、预览确认和执行记录的当前工作状态。</p>
       </div>
-      <RouterLink class="hero-action" to="/scan">开始目录扫描</RouterLink>
+      <div class="period-actions">
+        <button class="period active" type="button">24h</button>
+        <button class="period" type="button">7d</button>
+        <button class="period" type="button">30d</button>
+      </div>
+    </header>
+
+    <div class="stats-grid">
+      <article class="stat-card source">
+        <span class="percent">10%</span>
+        <span class="label">SOURCE</span>
+        <div class="stat-row"><strong>1</strong><span>SUC</span></div>
+        <div class="stat-row"><strong>0</strong><span>FAIL</span></div>
+      </article>
+      <article class="stat-card">
+        <span class="percent">100%</span>
+        <span class="label">PREVIEW</span>
+        <div class="stat-row"><strong>4</strong><span>STEP</span></div>
+        <div class="stat-row"><strong>0</strong><span>RISK</span></div>
+      </article>
+      <article class="stat-card">
+        <span class="percent">100%</span>
+        <span class="label">RULES</span>
+        <div class="stat-row"><strong>ON</strong><span>MODE</span></div>
+        <div class="stat-row"><strong>0</strong><span>FAIL</span></div>
+      </article>
+      <article class="stat-card resource">
+        <span class="percent">7%</span>
+        <span class="label">CPU</span>
+        <span class="percent second">65%</span>
+        <span class="label">RAM</span>
+      </article>
     </div>
 
-    <div class="metric-grid">
-      <article class="metric-card">
-        <span>整理流程</span>
-        <strong>4 步</strong>
-        <p>扫描、预览、执行、回滚</p>
+    <div class="analysis-grid">
+      <article class="section-card analysis-card">
+        <div class="section-head">
+          <div>
+            <h3>活跃时间线</h3>
+            <p class="hint">目录扫描 / 预览确认 / 执行记录</p>
+          </div>
+        </div>
+        <div class="timeline-lines">
+          <span style="height: 34%"></span>
+          <span style="height: 62%"></span>
+          <span style="height: 45%"></span>
+          <span style="height: 78%"></span>
+          <span style="height: 52%"></span>
+          <span style="height: 68%"></span>
+          <span style="height: 38%"></span>
+          <span style="height: 56%"></span>
+        </div>
       </article>
-      <article class="metric-card">
-        <span>工具箱</span>
-        <strong>1 个</strong>
-        <p>当前启用投稿模块</p>
-      </article>
-      <article class="metric-card">
-        <span>安全边界</span>
-        <strong>预览优先</strong>
-        <p>删除和移动前先审计</p>
-      </article>
-      <article class="metric-card">
-        <span>适配</span>
-        <strong>移动端</strong>
-        <p>窄屏自动堆叠布局</p>
-      </article>
-    </div>
 
-    <div class="workflow-grid">
-      <RouterLink class="workflow-card" to="/scan">
-        <span class="status-pill calm">整理</span>
-        <h3>目录扫描</h3>
-        <p>选择来源目录和目标目录，生成待整理清单。</p>
-      </RouterLink>
-      <RouterLink class="workflow-card" to="/preview">
-        <span class="status-pill">确认</span>
-        <h3>预览确认</h3>
-        <p>检查原路径、目标路径、冲突状态和最终动作。</p>
-      </RouterLink>
-      <RouterLink class="workflow-card" to="/submission">
-        <span class="status-pill calm">工具箱</span>
-        <h3>投稿模块</h3>
-        <p>输入 115 分享链接，生成频道图片和 Telegram 文案。</p>
-      </RouterLink>
-      <RouterLink class="workflow-card" to="/logs">
-        <span class="status-pill warning">审计</span>
-        <h3>任务日志</h3>
-        <p>查看执行日志，定位失败、删除和不可回滚操作。</p>
-      </RouterLink>
+      <article class="section-card analysis-card">
+        <div class="section-head">
+          <div>
+            <h3>UA统计分析</h3>
+            <p class="hint">近期功能调用与输出结果。</p>
+          </div>
+          <button class="secondary compact" type="button">手动添加</button>
+        </div>
+        <div class="ua-list">
+          <div><strong>目录扫描</strong><span>播放 / 直连</span><em>8/1</em></div>
+          <div><strong>预览确认</strong><span>生成 / 执行</span><em>1/1</em></div>
+          <div><strong>投稿模块</strong><span>推送 / 图片</span><em>1/1</em></div>
+        </div>
+      </article>
     </div>
   </section>
 </template>
@@ -63,93 +84,127 @@
   gap: 18px;
 }
 
-.hero-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  background: linear-gradient(135deg, #ffffff 0%, #f2f7ff 100%);
+.console-title {
+  min-height: 44px;
 }
 
-.hero-panel h2 {
-  margin: 0;
-  font-size: 30px;
+.period {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 850;
 }
 
-.hero-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  padding: 11px 16px;
-  background: var(--blue);
-  color: white;
-  font-weight: 800;
-  text-decoration: none;
-  white-space: nowrap;
+.period.active {
+  background: var(--ink);
+  color: #fff;
 }
 
-.metric-grid,
-.workflow-grid {
-  display: grid;
+.stats-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stat-card {
+  display: grid;
+  gap: 8px;
+  min-height: 150px;
+  padding: 18px;
+}
+
+.percent {
+  color: var(--ink);
+  font-size: 34px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.percent.second {
+  margin-top: 8px;
+}
+
+.label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stat-row strong {
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.stat-row span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.analysis-grid {
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+}
+
+.analysis-card {
+  display: grid;
+  gap: 18px;
+  min-height: 310px;
+}
+
+.timeline-lines {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+  height: 220px;
+  border-radius: 12px;
+  background: linear-gradient(#f1f3f6 1px, transparent 1px) 0 0 / 100% 44px;
+  padding: 18px;
+}
+
+.timeline-lines span {
+  flex: 1;
+  border-radius: 999px 999px 4px 4px;
+  background: var(--ink);
+}
+
+.ua-list {
+  display: grid;
   gap: 12px;
 }
 
-.metric-card,
-.workflow-card {
+.ua-list div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  padding: 16px;
-  box-shadow: var(--shadow);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f9fafb;
 }
 
-.metric-card span {
+.ua-list strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.ua-list span {
   color: var(--muted);
   font-size: 12px;
-  font-weight: 800;
 }
 
-.metric-card strong {
-  display: block;
-  margin-top: 6px;
-  font-size: 24px;
-}
-
-.metric-card p,
-.workflow-card p {
-  margin: 6px 0 0;
-  color: var(--muted);
-}
-
-.workflow-card {
-  display: grid;
-  gap: 10px;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.workflow-card h3 {
-  margin: 0;
-}
-
-@media (max-width: 1100px) {
-  .metric-grid,
-  .workflow-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 760px) {
-  .hero-panel {
-    display: grid;
-  }
-
-  .hero-action,
-  .metric-grid,
-  .workflow-grid {
-    grid-template-columns: 1fr;
-  }
+.ua-list em {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  color: var(--ink);
+  font-style: normal;
+  font-weight: 950;
 }
 </style>

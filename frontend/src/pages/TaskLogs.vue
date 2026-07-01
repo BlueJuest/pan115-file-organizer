@@ -41,12 +41,18 @@ async function loadLogs() {
 
 <template>
   <section class="logs-page">
-    <div class="card">
-      <header class="page-header">
+    <header class="page-title">
+      <div>
+        <p class="eyebrow">任务日志</p>
+        <h2>操作日志</h2>
+        <p class="hint">输入执行 ID，查看本次整理的操作日志。</p>
+      </div>
+    </header>
+
+    <div class="section-card">
+      <header class="section-head">
         <div>
-          <p class="eyebrow">任务日志</p>
-          <h2>操作日志</h2>
-          <p class="hint">输入执行 ID，查看本次整理的操作日志。</p>
+          <h3>执行记录</h3>
           <p class="hint">失败、删除和不可回滚操作需要重点检查。</p>
         </div>
       </header>
@@ -61,7 +67,8 @@ async function loadLogs() {
 
       <p v-if="message" class="message">{{ message }}</p>
       <p v-if="!loading && logs.length === 0" class="empty">暂无操作日志。</p>
-      <table v-else>
+      <div v-else class="table-shell">
+        <table>
         <thead>
           <tr>
             <th>ID</th>
@@ -82,7 +89,8 @@ async function loadLogs() {
             <td>{{ log.reversible && !log.rolled_back ? '是' : '否' }}</td>
           </tr>
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   </section>
 </template>

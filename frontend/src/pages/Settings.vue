@@ -109,8 +109,8 @@ onMounted(loadSettings)
 </script>
 
 <template>
-  <section class="card settings-page">
-    <header class="page-header">
+  <section class="settings-page">
+    <header class="page-title">
       <div>
         <p class="eyebrow">系统配置</p>
         <h2>系统设置</h2>
@@ -124,100 +124,105 @@ onMounted(loadSettings)
       <p>保存 115 Cookie 后，扫描和已确认的操作会读取真实 115 网盘；所有变更仍需先生成预览再确认执行。</p>
     </div>
 
-    <form class="form-grid" @submit.prevent="saveSettings">
-      <label class="form-row">
-        <span>115 Cookie</span>
-        <input v-model="form.pan115_cookie" type="password" placeholder="输入新的 115 Cookie" autocomplete="off" />
-        <small>当前：{{ masked.pan115_cookie || '未配置' }}</small>
-      </label>
-
-      <label class="form-row">
-        <span>TMDB API Key</span>
-        <input v-model="form.tmdb_api_key" type="password" placeholder="输入新的 TMDB API Key" autocomplete="off" />
-        <small>当前：{{ masked.tmdb_api_key || '未配置' }}</small>
-      </label>
-
-      <label class="form-row">
-        <span>TMDB 语言</span>
-        <input v-model="form.tmdb_language" placeholder="zh-CN" />
-      </label>
-
-      <div class="directory-grid">
+    <form class="settings-form" @submit.prevent="saveSettings">
+      <section class="section-card form-grid">
+        <div class="section-head">
+          <div>
+            <h3>基础连接</h3>
+            <p class="hint">配置 115 与 TMDB 访问凭据。</p>
+          </div>
+        </div>
         <label class="form-row">
-          <span>Telegram bot token</span>
-          <input v-model="form.telegram_bot_token" type="password" placeholder="输入新的 bot token" autocomplete="off" />
-          <small>当前：{{ masked.telegram_bot_token || '未配置' }}</small>
+          <span>115 Cookie</span>
+          <input v-model="form.pan115_cookie" type="password" placeholder="输入新的 115 Cookie" autocomplete="off" />
+          <small>当前：{{ masked.pan115_cookie || '未配置' }}</small>
         </label>
-        <label class="form-row">
-          <span>Telegram 频道 ID</span>
-          <input v-model="form.telegram_channel_id" placeholder="@channel 或 -100..." />
+        <div class="two-columns">
+          <label class="form-row">
+            <span>TMDB API Key</span>
+            <input v-model="form.tmdb_api_key" type="password" placeholder="输入新的 TMDB API Key" autocomplete="off" />
+            <small>当前：{{ masked.tmdb_api_key || '未配置' }}</small>
+          </label>
+          <label class="form-row">
+            <span>TMDB 语言</span>
+            <input v-model="form.tmdb_language" placeholder="zh-CN" />
+          </label>
+        </div>
+      </section>
+
+      <section class="section-card form-grid">
+        <div class="section-head">
+          <div>
+            <h3>投稿通知</h3>
+            <p class="hint">配置 Telegram 推送和默认展示身份。</p>
+          </div>
+        </div>
+        <div class="directory-grid">
+          <label class="form-row">
+            <span>Telegram bot token</span>
+            <input v-model="form.telegram_bot_token" type="password" placeholder="输入新的 bot token" autocomplete="off" />
+            <small>当前：{{ masked.telegram_bot_token || '未配置' }}</small>
+          </label>
+          <label class="form-row">
+            <span>Telegram 频道 ID</span>
+            <input v-model="form.telegram_channel_id" placeholder="@channel 或 -100..." />
+          </label>
+          <label class="form-row">
+            <span>默认分享人</span>
+            <input v-model="form.default_share_user" placeholder="发布者名称" />
+          </label>
+        </div>
+      </section>
+
+      <section class="section-card form-grid">
+        <div class="section-head">
+          <div>
+            <h3>目录默认值</h3>
+            <p class="hint">扫描、整理和回收操作的默认目录。</p>
+          </div>
+        </div>
+        <div class="directory-grid">
+          <DirectoryPicker v-model="form.default_source_dir" label="默认来源目录" placeholder="0" value-mode="id" />
+          <DirectoryPicker v-model="form.default_target_dir" label="默认目标目录" placeholder="0" value-mode="id" />
+          <DirectoryPicker v-model="form.default_recycle_dir" label="默认回收目录" placeholder="0" value-mode="id" />
+        </div>
+      </section>
+
+      <section class="section-card form-grid">
+        <div class="section-head">
+          <div>
+            <h3>执行策略</h3>
+            <p class="hint">控制真实操作和默认扫描深度。</p>
+          </div>
+        </div>
+        <label class="check-row">
+          <input v-model="form.allow_delete_old_files" type="checkbox" />
+          <span>允许删除旧文件</span>
         </label>
-        <label class="form-row">
-          <span>默认分享人</span>
-          <input v-model="form.default_share_user" placeholder="发布者名称" />
+        <label class="check-row">
+          <input v-model="form.recursive_scan" type="checkbox" />
+          <span>默认递归扫描目录</span>
         </label>
+      </section>
+
+      <div class="section-card settings-actions">
+        <div class="actions">
+          <button type="submit" :disabled="saving">{{ saving ? '保存中...' : '保存配置' }}</button>
+          <button class="secondary" type="button" @click="testConnection('115')">测试 115</button>
+          <button class="secondary" type="button" @click="testConnection('tmdb')">测试 TMDB</button>
+        </div>
+        <p v-if="message" class="message">{{ message }}</p>
       </div>
-
-      <div class="directory-grid">
-        <DirectoryPicker v-model="form.default_source_dir" label="默认来源目录" placeholder="0" value-mode="id" />
-        <DirectoryPicker v-model="form.default_target_dir" label="默认目标目录" placeholder="0" value-mode="id" />
-        <DirectoryPicker v-model="form.default_recycle_dir" label="默认回收目录" placeholder="0" value-mode="id" />
-      </div>
-
-      <label class="check-row">
-        <input v-model="form.allow_delete_old_files" type="checkbox" />
-        <span>允许删除旧文件</span>
-      </label>
-
-      <label class="check-row">
-        <input v-model="form.recursive_scan" type="checkbox" />
-        <span>默认递归扫描目录</span>
-      </label>
-
-      <div class="actions">
-        <button type="submit" :disabled="saving">{{ saving ? '保存中...' : '保存配置' }}</button>
-        <button class="secondary" type="button" @click="testConnection('115')">测试 115</button>
-        <button class="secondary" type="button" @click="testConnection('tmdb')">测试 TMDB</button>
-      </div>
-
-      <p v-if="message" class="message">{{ message }}</p>
     </form>
   </section>
 </template>
 
 <style scoped>
-.settings-page {
+.settings-page,
+.settings-form,
+.settings-actions {
   display: grid;
-  gap: 20px;
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.page-header h2 {
-  margin: 0;
-}
-
-.eyebrow {
-  margin: 0 0 4px;
-  color: var(--blue);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.hint,
-small {
-  color: var(--muted);
-}
-
-.directory-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 18px;
 }
 
 .check-row {
@@ -228,23 +233,5 @@ small {
 
 .check-row input {
   width: auto;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.message {
-  margin: 0;
-  color: var(--green);
-  font-weight: 600;
-}
-
-@media (max-width: 900px) {
-  .directory-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

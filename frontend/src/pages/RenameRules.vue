@@ -111,101 +111,106 @@ onMounted(loadRules)
 
 <template>
   <section class="rules-page">
-    <div class="card list-card">
-      <header class="page-header">
-        <div>
-          <p class="eyebrow">Rename Rules</p>
-          <h2>重命名规则</h2>
-        </div>
-        <button type="button" @click="resetForm">新增规则</button>
-      </header>
-
-      <p v-if="loading">规则加载中...</p>
-      <p v-else-if="rules.length === 0" class="empty">还没有规则，请先新增一条。</p>
-      <table v-else>
-        <thead>
-          <tr>
-            <th>优先级</th>
-            <th>名称</th>
-            <th>媒体类型</th>
-            <th>状态</th>
-            <th>命中</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="rule in rules" :key="rule.id" :class="{ selected: rule.id === selectedId }">
-            <td>{{ rule.priority }}</td>
-            <td>{{ rule.name }}</td>
-            <td>{{ rule.media_type }}</td>
-            <td>{{ rule.enabled ? '启用' : '停用' }}</td>
-            <td>{{ rule.hit_count }}</td>
-            <td><button class="secondary" type="button" @click="editRule(rule)">编辑</button></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <form class="card form-grid editor-card" @submit.prevent="saveRule">
-      <header>
-        <h3>{{ selectedRule ? `编辑：${selectedRule.name}` : '新增规则' }}</h3>
+    <header class="page-title">
+      <div>
+        <p class="eyebrow">Rename Rules</p>
+        <h2>重命名规则</h2>
         <p class="hint">使用正则命名捕获字段，并在模板中用 {field} 输出目标路径。</p>
-      </header>
+      </div>
+      <button type="button" @click="resetForm">新增规则</button>
+    </header>
 
-      <div class="two-columns">
+    <div class="config-grid">
+      <div class="section-card list-card">
+        <p v-if="loading">规则加载中...</p>
+        <p v-else-if="rules.length === 0" class="empty">还没有规则，请先新增一条。</p>
+        <div v-else class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>名称</th>
+                <th>媒体类型</th>
+                <th>状态</th>
+                <th>命中</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="rule in rules" :key="rule.id" :class="{ selected: rule.id === selectedId }">
+                <td>{{ rule.priority }}</td>
+                <td>{{ rule.name }}</td>
+                <td>{{ rule.media_type }}</td>
+                <td>{{ rule.enabled ? '启用' : '停用' }}</td>
+                <td>{{ rule.hit_count }}</td>
+                <td><button class="secondary" type="button" @click="editRule(rule)">编辑</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <form class="section-card form-grid editor-card" @submit.prevent="saveRule">
+        <header>
+          <h3>{{ selectedRule ? `编辑：${selectedRule.name}` : '新增规则' }}</h3>
+          <p class="hint">使用正则命名捕获字段，并在模板中用 {field} 输出目标路径。</p>
+        </header>
+
+        <div class="two-columns">
+          <label class="form-row">
+            <span>规则名称</span>
+            <input v-model="form.name" required placeholder="movie-year" />
+          </label>
+          <label class="form-row">
+            <span>媒体类型</span>
+            <select v-model="form.media_type">
+              <option value="movie">movie</option>
+              <option value="tv">tv</option>
+              <option value="anime">anime</option>
+            </select>
+          </label>
+        </div>
+
         <label class="form-row">
-          <span>规则名称</span>
-          <input v-model="form.name" required placeholder="movie-year" />
+          <span>匹配正则</span>
+          <textarea v-model="form.pattern" required rows="3" placeholder="(?P&lt;title&gt;.+?)[ ._-]+(?P&lt;year&gt;20\d{2})" />
         </label>
+
         <label class="form-row">
-          <span>媒体类型</span>
-          <select v-model="form.media_type">
-            <option value="movie">movie</option>
-            <option value="tv">tv</option>
-            <option value="anime">anime</option>
-          </select>
+          <span>输出模板</span>
+          <textarea v-model="form.template" required rows="3" placeholder="/电影/{title} ({year})/{title} ({year}).{ext}" />
         </label>
-      </div>
 
-      <label class="form-row">
-        <span>匹配正则</span>
-        <textarea v-model="form.pattern" required rows="3" placeholder="(?P&lt;title&gt;.+?)[ ._-]+(?P&lt;year&gt;20\d{2})" />
-      </label>
+        <div class="two-columns">
+          <label class="form-row">
+            <span>优先级</span>
+            <input v-model.number="form.priority" type="number" />
+          </label>
+          <label class="check-row">
+            <input v-model="form.enabled" type="checkbox" />
+            <span>启用规则</span>
+          </label>
+        </div>
 
-      <label class="form-row">
-        <span>输出模板</span>
-        <textarea v-model="form.template" required rows="3" placeholder="/电影/{title} ({year})/{title} ({year}).{ext}" />
-      </label>
-
-      <div class="two-columns">
         <label class="form-row">
-          <span>优先级</span>
-          <input v-model.number="form.priority" type="number" />
+          <span>测试样例</span>
+          <input v-model="form.sample_input" placeholder="流浪地球 2019 2160p WEB-DL.mkv" />
         </label>
-        <label class="check-row">
-          <input v-model="form.enabled" type="checkbox" />
-          <span>启用规则</span>
-        </label>
-      </div>
 
-      <label class="form-row">
-        <span>测试样例</span>
-        <input v-model="form.sample_input" placeholder="流浪地球 2019 2160p WEB-DL.mkv" />
-      </label>
+        <div class="actions">
+          <button type="submit" :disabled="saving">{{ saving ? '保存中...' : '保存规则' }}</button>
+          <button class="secondary" type="button" @click="testRule">测试规则</button>
+        </div>
 
-      <div class="actions">
-        <button type="submit" :disabled="saving">{{ saving ? '保存中...' : '保存规则' }}</button>
-        <button class="secondary" type="button" @click="testRule">测试规则</button>
-      </div>
-
-      <div v-if="testResult" class="test-result">
-        <strong>{{ testResult.matched ? '已匹配' : '未匹配' }}</strong>
-        <p v-if="testResult.output">输出：{{ testResult.output }}</p>
-        <p v-if="testResult.error">错误：{{ testResult.error }}</p>
-        <pre>{{ testResult.fields }}</pre>
-      </div>
-      <p v-if="message" class="message">{{ message }}</p>
-    </form>
+        <div v-if="testResult" class="test-result">
+          <strong>{{ testResult.matched ? '已匹配' : '未匹配' }}</strong>
+          <p v-if="testResult.output">输出：{{ testResult.output }}</p>
+          <p v-if="testResult.error">错误：{{ testResult.error }}</p>
+          <pre>{{ testResult.fields }}</pre>
+        </div>
+        <p v-if="message" class="message">{{ message }}</p>
+      </form>
+    </div>
   </section>
 </template>
 
@@ -215,79 +220,32 @@ onMounted(loadRules)
   gap: 18px;
 }
 
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.page-header h2,
-.editor-card h3 {
-  margin: 0;
-}
-
-.eyebrow {
-  margin: 0 0 4px;
-  color: var(--blue);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.hint,
-.empty {
-  color: var(--muted);
-}
-
-.two-columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+.editor-card {
+  align-content: start;
 }
 
 .check-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-top: 24px;
+  padding-top: 28px;
 }
 
 .check-row input {
   width: auto;
 }
 
-.actions {
-  display: flex;
-  gap: 10px;
-}
-
-.selected {
-  background: var(--blue-soft);
-}
-
 .test-result {
-  border: 1px solid #b8d0ff;
-  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
   padding: 12px;
-  background: var(--blue-soft);
+  background: #f9fafb;
 }
 
 .test-result pre {
-  margin-bottom: 0;
+  margin: 0;
   white-space: pre-wrap;
 }
-
-.message {
-  margin: 0;
-  color: var(--green);
-  font-weight: 600;
-}
-
-@media (max-width: 900px) {
-  .two-columns {
-    grid-template-columns: 1fr;
-  }
-}
 </style>
-

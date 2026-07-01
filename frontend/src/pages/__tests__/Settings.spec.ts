@@ -16,6 +16,9 @@ describe('Settings', () => {
         json: async () => ({
           pan115_cookie_masked: '',
           tmdb_api_key_masked: '',
+          telegram_bot_token_masked: '',
+          telegram_channel_id: '',
+          default_share_user: '',
           tmdb_language: 'zh-CN',
           default_source_dir: '0',
           default_target_dir: '0',

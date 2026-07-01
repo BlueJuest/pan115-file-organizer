@@ -73,15 +73,15 @@ async function executeRollback() {
 
 <template>
   <section class="rollback-page">
-    <div class="card">
-      <header class="page-header">
-        <div>
-          <p class="eyebrow">Rollback</p>
-          <h2>回滚记录</h2>
-          <p class="hint">输入执行 ID，生成回滚计划并执行可逆操作。</p>
-        </div>
-      </header>
+    <header class="page-title">
+      <div>
+        <p class="eyebrow">Rollback</p>
+        <h2>回滚记录</h2>
+        <p class="hint">输入执行 ID，生成回滚计划并执行可逆操作。</p>
+      </div>
+    </header>
 
+    <div class="section-card">
       <div class="risk-panel">
         <strong>回滚边界</strong>
         <p>只回滚本工具记录过的可逆操作。真实删除不会进入回滚计划。</p>
@@ -100,7 +100,8 @@ async function executeRollback() {
 
       <p v-if="message" class="message">{{ message }}</p>
       <p v-if="!planning && items.length === 0" class="empty">暂无回滚计划。</p>
-      <table v-else>
+      <div v-else class="table-shell">
+        <table>
         <thead>
           <tr>
             <th>文件</th>
@@ -117,7 +118,8 @@ async function executeRollback() {
             <td>{{ item.reversible ? '是' : '否' }}</td>
           </tr>
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   </section>
 </template>

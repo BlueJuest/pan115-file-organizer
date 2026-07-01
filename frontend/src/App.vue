@@ -1,55 +1,75 @@
+<script setup lang="ts">
+import { Clock, DataAnalysis, DocumentChecked, Files, FolderOpened, House, RefreshLeft, Setting, SwitchButton, Tools } from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+import { logout } from './api/auth'
+
+const route = useRoute()
+const router = useRouter()
+
+const isLogin = computed(() => route.path === '/login')
+
+const menuItems = [
+  { path: '/', label: '控制台', icon: House },
+  { path: '/scan', label: '目录扫描', icon: FolderOpened },
+  { path: '/preview', label: '预览确认', icon: DocumentChecked },
+  { path: '/rules', label: '重命名规则', icon: Tools },
+  { path: '/quality', label: '洗版策略', icon: DataAnalysis },
+  { path: '/settings', label: '系统设置', icon: Setting },
+  { path: '/submission', label: '投稿模块', icon: Files },
+  { path: '/telegram-push-logs', label: 'TG 推送记录', icon: Clock },
+  { path: '/logs', label: '任务日志', icon: Clock },
+  { path: '/rollback', label: '回滚记录', icon: RefreshLeft },
+]
+
+async function handleLogout() {
+  await logout()
+  await router.push('/login')
+}
+</script>
+
 <template>
-  <div class="app-shell">
-    <aside class="sidebar">
+  <RouterView v-if="isLogin" />
+  <div v-else class="admin-shell">
+    <aside class="admin-sidebar">
       <div class="brand-block">
-        <span class="brand-mark">115</span>
+        <span class="brand-dot"></span>
         <div>
           <h1>115 Manage</h1>
-          <p>文件整理工作台</p>
+          <p>后台管理控制台</p>
         </div>
       </div>
 
-      <nav class="nav-group" aria-label="主要功能">
-        <p class="nav-label">工作台</p>
-        <RouterLink to="/">仪表盘</RouterLink>
-        <RouterLink to="/scan">目录扫描</RouterLink>
-        <RouterLink to="/preview">预览确认</RouterLink>
-      </nav>
-
-      <nav class="nav-group" aria-label="整理配置">
-        <p class="nav-label">整理配置</p>
-        <RouterLink to="/rules">重命名规则</RouterLink>
-        <RouterLink to="/quality">洗版策略</RouterLink>
-        <RouterLink to="/settings">系统配置</RouterLink>
-      </nav>
-
-      <nav class="nav-group" aria-label="工具箱">
-        <p class="nav-label">工具箱</p>
-        <RouterLink to="/submission">投稿模块</RouterLink>
-        <RouterLink to="/telegram-push-logs">TG 推送记录</RouterLink>
-        <RouterLink to="/logs">任务日志</RouterLink>
-        <RouterLink to="/rollback">回滚记录</RouterLink>
-      </nav>
-
-      <div class="sidebar-note">
-        <strong>安全模式</strong>
-        <span>预览确认后再执行真实 115 操作</span>
+      <div class="nav-group">
+        <RouterLink v-for="item in menuItems" :key="item.path" class="nav-link" :to="item.path">
+          <el-icon><component :is="item.icon" /></el-icon>
+          <span>{{ item.label }}</span>
+        </RouterLink>
       </div>
+
+      <div class="sidebar-footer">
+        <span class="online-dot"></span>
+        <span>连接正常</span>
+      </div>
+      <button class="logout-link" type="button" @click="handleLogout">
+        <el-icon><SwitchButton /></el-icon>
+        <span>退出登录</span>
+      </button>
+      <span class="version-label">v1.0.0</span>
     </aside>
 
-    <main class="content">
-      <header class="top-status">
-        <div>
-          <p class="eyebrow">115 文件整理</p>
-          <strong>扫描、预览、执行、回滚的整理闭环</strong>
-        </div>
-        <div class="status-group">
-          <span class="status-pill">真实扫描</span>
-          <span class="status-pill warning">删除需审计</span>
-          <span class="status-pill calm">投稿模块</span>
-        </div>
-      </header>
-      <RouterView />
+    <main class="admin-content">
+      <div class="admin-main">
+        <RouterView />
+      </div>
     </main>
+
+    <nav class="mobile-dock" aria-label="移动端导航">
+      <RouterLink v-for="item in menuItems.slice(0, 5)" :key="item.path" :to="item.path">
+        <el-icon><component :is="item.icon" /></el-icon>
+        <span>{{ item.label }}</span>
+      </RouterLink>
+    </nav>
   </div>
 </template>

@@ -81,14 +81,22 @@ async function publish() {
 
 <template>
   <section class="submission-page">
-    <div class="card submission-form-card">
-      <header class="page-header">
-        <div>
-          <p class="eyebrow">投稿生成</p>
-          <h2>Telegram 投稿</h2>
-          <p class="hint">输入 115 分享链接，自动识别媒体信息并生成频道文案。</p>
-        </div>
-      </header>
+    <header class="page-title">
+      <div>
+        <p class="eyebrow">投稿生成</p>
+        <h2>Telegram 投稿</h2>
+        <p class="hint">输入 115 分享链接，自动识别媒体信息并生成频道文案。</p>
+      </div>
+    </header>
+
+    <div class="config-grid">
+      <div class="section-card submission-form-card">
+        <header class="section-head">
+          <div>
+            <h3>投稿参数</h3>
+            <p class="hint">先生成预览，再确认推送。</p>
+          </div>
+        </header>
 
       <form class="form-grid" @submit.prevent="generatePreview">
         <label class="form-row">
@@ -164,7 +172,7 @@ async function publish() {
       </form>
     </div>
 
-    <div class="card preview-card">
+      <div class="section-card preview-card">
       <header class="preview-header">
         <div>
           <p class="eyebrow">预览确认</p>
@@ -198,6 +206,7 @@ async function publish() {
       </div>
 
       <p v-else class="empty-preview">生成后会在这里显示频道推送图片和 Telegram 文案。</p>
+    </div>
     </div>
   </section>
 </template>

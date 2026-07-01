@@ -11,6 +11,9 @@ class AppSettings(BaseSettings):
     data_dir: Path = Path("../data")
     telegram_bot_token: str = ""
     telegram_channel_id: str = ""
+    admin_username: str = "root"
+    admin_password: str = "Dl960513."
+    session_secret: str = "change-me-in-production"
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="PAN115_")
 
